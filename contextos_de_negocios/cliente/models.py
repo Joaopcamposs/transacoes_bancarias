@@ -1,7 +1,9 @@
 from uuid import uuid4
 
 from sqlalchemy import Column, Uuid, String
+from sqlalchemy.orm import relationship
 
+from contextos_de_negocios.conta_bancaria.models import ContaBancaria
 from infra.database import Base
 
 
@@ -13,4 +15,4 @@ class Cliente(Base):
     cpf = Column(String, index=True, unique=True)
 
     # Relacionamento com ContaBancaria
-    # contas = relationship("ContaBancaria", back_populates="cliente")
+    contas = relationship(ContaBancaria, back_populates="cliente")

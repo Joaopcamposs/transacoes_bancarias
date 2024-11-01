@@ -6,9 +6,10 @@ import infra.database
 from contextos_de_negocios.utils.constantes import SENTRY_DSN
 from infra.database import engine, criar_primeiro_usuario
 
-from contextos_de_negocios.usuario.routes import router as usuario_router
-from contextos_de_negocios.cliente.routes import router as cliente_router
 from contextos_de_negocios.servicos.routes import router as servicos_router
+from contextos_de_negocios.conta_bancaria.routes import router as conta_bancaria_router
+from contextos_de_negocios.cliente.routes import router as cliente_router
+from contextos_de_negocios.usuario.routes import router as usuario_router
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
@@ -64,5 +65,6 @@ app.add_middleware(
 
 # include routes from api
 app.include_router(servicos_router)
-app.include_router(usuario_router)
+app.include_router(conta_bancaria_router)
 app.include_router(cliente_router)
+app.include_router(usuario_router)

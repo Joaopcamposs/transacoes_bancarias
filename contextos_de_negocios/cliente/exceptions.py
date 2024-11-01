@@ -17,17 +17,17 @@ class ClienteJaCadastrado(HTTPException):
 
 @dataclass
 class ErroAoCadastrarCliente(HTTPException):
-    detail: str = "Erro ao cadastrar usuário."
+    detail: str = "Erro ao cadastrar cliente."
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @dataclass
 class ErroAoAtualizarCliente(HTTPException):
-    detail: str = "Erro ao atualizar usuário."
+    detail: str = "Erro ao atualizar cliente."
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @dataclass
 class ErroAoDeletarCliente(HTTPException):
-    detail: str = "Erro ao deletar usuário."
+    detail: str = "Erro ao deletar cliente."
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
