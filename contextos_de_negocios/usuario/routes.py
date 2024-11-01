@@ -12,7 +12,7 @@ from contextos_de_negocios.usuario.schemas import CadastrarEAtualizarUsuario, Le
 from infra.database import get_db
 
 router = APIRouter(
-    prefix="/api/v1",
+    prefix="/api",
     tags=["Usuarios"],
     dependencies=[Depends(Servicos.obter_usuario_atual_adm)],
 )

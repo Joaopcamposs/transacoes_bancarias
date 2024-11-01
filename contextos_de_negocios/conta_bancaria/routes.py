@@ -16,7 +16,7 @@ from contextos_de_negocios.servicos.controllers import Servicos
 from infra.database import get_db
 
 router = APIRouter(
-    prefix="/api/v1",
+    prefix="/api",
     tags=["Conta Bancaria"],
     dependencies=[Depends(Servicos.obter_usuario_atual)],
 )

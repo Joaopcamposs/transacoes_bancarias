@@ -1,3 +1,5 @@
+from typing import AsyncIterable
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -5,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from contextos_de_negocios.utils.constantes import (
     DATABASE_URI,
     SENHA_PRIMEIRO_USUARIO,
+    EMAIL_PRIMEIRO_USUARIO,
 )
 
 Base = declarative_base()
@@ -13,7 +16,6 @@ engine = create_async_engine(
     DATABASE_URI,
     isolation_level="SERIALIZABLE",  # usar 'REPEATABLE READ' quando postgres real, SERIALIZABLE para sqlite
     future=True,
-    echo=True,
 )
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
 
@@ -23,8 +25,8 @@ async def get_db():
         yield session
 
 
-async def extrair_sessao():
-    async for session in get_db():
+async def extrair_sessao(conexao: AsyncIterable = get_db()) -> AsyncSession:
+    async for session in conexao:
         return session
 
 
@@ -38,7 +40,7 @@ async def criar_primeiro_usuario() -> None:
         if not usuarios:
             usuario = CadastrarEAtualizarUsuario(
                 nome="Admin",
-                email="admin@email.com",
+                email=EMAIL_PRIMEIRO_USUARIO,
                 senha=SENHA_PRIMEIRO_USUARIO,
                 adm=True,
                 ativo=True,

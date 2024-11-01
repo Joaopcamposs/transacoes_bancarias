@@ -2,3 +2,4 @@ venv
 .idea
 database.db
 .env
+testes/test_database.db
