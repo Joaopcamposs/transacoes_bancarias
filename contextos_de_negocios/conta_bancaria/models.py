@@ -3,6 +3,7 @@ from uuid import uuid4
 from sqlalchemy import Column, Uuid, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 
+from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
 from infra.database import Base
 
 
@@ -19,8 +20,8 @@ class ContaBancaria(Base):
     # Relacionamento com Cliente
     cliente = relationship("Cliente", back_populates="contas")
     # Relacionamento com TransacaoBancaria
-    # transacoes = relationship(
-    #     "TransacaoBancaria",
-    #     back_populates="conta",
-    #     foreign_keys="[TransacaoBancaria.numero_da_conta]",
-    # )
+    transacoes = relationship(
+        TransacaoBancaria,
+        back_populates="conta",
+        foreign_keys="[TransacaoBancaria.numero_da_conta]",
+    )
