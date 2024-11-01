@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
 from contextos_de_negocios.servicos.exceptions import NaoFoiPossivelValidarAsCredenciais
+from contextos_de_negocios.usuario.exceptions import PermissaoFaltando
 from contextos_de_negocios.usuario.models import Usuario
 from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM
 from infra.database import get_db
@@ -85,5 +86,19 @@ class Servicos:
             )
         return usuario
 
+    @staticmethod
+    async def obter_usuario_atual_adm(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        session: AsyncSession = Depends(get_db),
+    ):
+        usuario = await Servicos.obter_usuario_atual(
+            token=token,
+            session=session,
+        )
+        if not usuario.adm:
+            raise PermissaoFaltando
+        return usuario
+
 
 UsuarioAtual = Annotated[Usuario, Depends(Servicos.obter_usuario_atual)]
+UsuarioAtualADM = Annotated[Usuario, Depends(Servicos.obter_usuario_atual_adm)]

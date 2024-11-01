@@ -22,6 +22,18 @@ class PermissaoFaltando(HTTPException):
 
 
 @dataclass
+class ErroAoCadastrarUsuario(HTTPException):
+    detail: str = "Erro ao deletar usuário."
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+@dataclass
+class ErroAoAtualizarUsuario(HTTPException):
+    detail: str = "Erro ao deletar usuário."
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+@dataclass
 class ErroAoDeletarUsuario(HTTPException):
     detail: str = "Erro ao deletar usuário."
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR

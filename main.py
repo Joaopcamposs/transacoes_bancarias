@@ -7,16 +7,12 @@ from contextos_de_negocios.utils.constantes import SENTRY_DSN
 from infra.database import engine, criar_primeiro_usuario
 
 from contextos_de_negocios.usuario.routes import router as usuario_router
+from contextos_de_negocios.cliente.routes import router as cliente_router
 from contextos_de_negocios.servicos.routes import router as servicos_router
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
     traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
     profiles_sample_rate=1.0,
     enable_tracing=True,
 )
@@ -67,5 +63,6 @@ app.add_middleware(
 )
 
 # include routes from api
-app.include_router(usuario_router)
 app.include_router(servicos_router)
+app.include_router(usuario_router)
+app.include_router(cliente_router)
