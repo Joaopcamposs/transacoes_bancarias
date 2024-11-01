@@ -1,0 +1,2 @@
+[lint.per-file-ignores]
+"conftest.py" = ["F401"]  # Ignora F401 apenas no conftest.py
