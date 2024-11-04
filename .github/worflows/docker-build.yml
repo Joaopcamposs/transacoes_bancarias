@@ -1,0 +1,107 @@
+name: Docker Build and Deploy Transacoes Bancarias
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create .env file
+        run: |
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          
+          echo "EMAIL_PRIMEIRO_USUARIO=${{ secrets.EMAIL_PRIMEIRO_USUARIO }}" >> .env
+          echo "SENHA_PRIMEIRO_USUARIO=${{ secrets.SENHA_PRIMEIRO_USUARIO }}" >> .env
+          
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env
+          
+          echo "SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
+
+      - name: Build and push Docker fastapi image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          dockerfile: Dockerfile
+          tags: joaopcamposs/sistema_blanca:blanca_backend
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set permissions for private key
+        run: |
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Pull github code
+        env:
+          INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && git pull'
+
+      - name: Pull Docker image transacoes bancarias
+        env:
+          INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_pull'
+
+      - name: Stop running container transacoes bancaria
+        env:
+          INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_stop'
+
+      - name: Run new container transacoes bancaria
+        env:
+          INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker-build-up-compose'  
+
+      - name: Test api IP_PUBLIC route test
+        env:
+          INSTANCE_IP: ${{ secrets.INSTANCE_IP }}
+        run: |
+          sleep 30
+          response=$(curl -X GET http://$INSTANCE_IP:8001/test)
+          echo "$response"  # Exibe a resposta para fins de depuração
+          if echo "$response" | grep -q "OK"; then
+            echo "A rota local retornou OK"
+          else
+            echo "A rota não retornou OK"
+            exit 1  # Encerra o script com um código de saída diferente de zero para indicar falha
+          fi
+
+      - name: Clean up Docker old files
+        env:
+          INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_clean'

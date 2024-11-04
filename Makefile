@@ -1,9 +1,5 @@
-# Nome da imagem e tag do projeto (pode ser configurável)
 IMAGE_NAME = joaopcamposs/transacoes_bancarias
 TAG = latest
-
-# Caminho para o Dockerfile
-DOCKERFILE_PATH = infra/Dockerfile
 
 ruff:
 	ruff format . && ruff check . --fix
@@ -11,11 +7,20 @@ ruff:
 run:
 	fastapi dev contextos_de_negocios/main.py
 
+docker_pull:
+	docker pull $(IMAGE_NAME):$(TAG)
+
+docker_stop:
+	docker rm -f transacoes_bancarias || true
+
+docker_clean:
+	docker system prune -f
+
 docker-build:
-	docker build -t joaopcamposs/transacoes_bancarias:transacoes_bancarias -f $(DOCKERFILE_PATH) .
+	docker build -t $(IMAGE_NAME):$(TAG) -f $(DOCKERFILE_PATH) .
 
 docker-run:
-	docker run --name transacoes_bancarias -p 8000:8000 -d --restart always joaopcamposs/transacoes_bancarias:transacoes_bancarias
+	docker run --name transacoes_bancarias -p 8001:8000 -d --restart always $(IMAGE_NAME):$(TAG)
 
 docker-stop:
 	docker rm -f transacoes_bancarias
