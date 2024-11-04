@@ -11,6 +11,7 @@ from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
 from contextos_de_negocios.conta_bancaria.controllers import ContaBancariaControllers
 from contextos_de_negocios.conta_bancaria.schemas import CadastrarContaBancaria
 from contextos_de_negocios.servicos.controllers import Servicos
+from contextos_de_negocios.utils.tipos_basicos import CPF
 
 
 @dataclass
@@ -72,7 +73,7 @@ async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
 
 @pytest.fixture(scope="function")
 def mock_cliente_gen() -> dict:
-    return {"nome": "Cliente Teste", "cpf": str(randint(100000, 999999))}
+    return {"nome": "Cliente Teste", "cpf": CPF().gerar()}
 
 
 @pytest_asyncio.fixture(scope="function")

@@ -6,17 +6,19 @@ from _decimal import Decimal
 from contextos_de_negocios.conta_bancaria.exceptions import (
     SaldoInsuficienteParaRealizarTransacao,
 )
+from contextos_de_negocios.conta_bancaria.models import ContaBancaria
 from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
 from contextos_de_negocios.transacao_bancaria.objetos_de_valor import TipoTransacao
 from contextos_de_negocios.transacao_bancaria.schemas import CadastrarTransacaoBancaria
+from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta, CPF
 
 
 @dataclass
 class Conta:
-    id: UUID
-    numero_da_conta: str
+    numero_da_conta: NumeroDaConta | str
     saldo: Decimal
-    cpf_cliente: str
+    cpf_cliente: CPF | str
+    id: UUID = uuid4()
 
     @staticmethod
     def _validar_valor_da_operacao(valor: Decimal) -> None:
@@ -49,7 +51,6 @@ class Conta:
 
         self.saldo -= valor
         return TransacaoBancaria(
-            id=uuid4(),
             tipo=TipoTransacao.SAQUE.value,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
@@ -58,7 +59,6 @@ class Conta:
     def realizar_deposito(self, valor: Decimal) -> TransacaoBancaria:
         self.saldo += valor
         return TransacaoBancaria(
-            id=uuid4(),
             tipo=TipoTransacao.DEPOSITO.value,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
@@ -71,9 +71,23 @@ class Conta:
 
         self.saldo -= valor
         return TransacaoBancaria(
-            id=uuid4(),
             tipo=TipoTransacao.TRANSFERENCIA.value,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
             numero_da_conta_destino=numero_da_conta_destino,
+        )
+
+    def nova_conta(self) -> ContaBancaria:
+        return ContaBancaria(
+            numero_da_conta=NumeroDaConta(self.numero_da_conta),
+            saldo=Decimal(self.saldo),
+            cpf_cliente=CPF.somente_digitos(str(self.cpf_cliente)),
+        )
+
+    def atualizar_conta(self) -> ContaBancaria:
+        return ContaBancaria(
+            id=self.id,
+            numero_da_conta=self.numero_da_conta,
+            cpf_cliente=self.cpf_cliente,
+            saldo=self.saldo,
         )

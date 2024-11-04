@@ -3,12 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextos_de_negocios.cliente.exceptions import ClienteNaoEncontrado
 from contextos_de_negocios.cliente.repositorio import RepoClienteLeitura
+from contextos_de_negocios.conta_bancaria.agregado import Conta
 from contextos_de_negocios.conta_bancaria.exceptions import (
     ContaBancariaJaCadastrado,
     ContaBancariaNaoEncontrado,
     ErroAoDeletarContaBancaria,
     ErroAoAtualizarContaBancaria,
-    ErroAoCadastrarContaBancaria,
 )
 from contextos_de_negocios.conta_bancaria.models import ContaBancaria
 from contextos_de_negocios.conta_bancaria.repositorio import (
@@ -43,17 +43,18 @@ class ContaBancariaControllers:
         if not cliente:
             raise ClienteNaoEncontrado
 
-        novo_conta_bancaria = ContaBancaria(**conta_bancaria.dict())
-        try:
-            novo_conta_bancaria = await RepoContaBancariaEscrita.adicionar(
-                session=session,
-                conta_bancaria=novo_conta_bancaria,
-                tipo_operacao=TipoOperacao.INSERCAO,
-            )
-        except Exception as erro:
-            raise ErroAoCadastrarContaBancaria(
-                detail=f"Erro ao cadastrar conta bancaria: {erro}",
-            )
+        novo_conta_bancaria = Conta(
+            numero_da_conta=conta_bancaria.numero_da_conta,
+            saldo=conta_bancaria.saldo,
+            cpf_cliente=conta_bancaria.cpf_cliente,
+        ).nova_conta()
+
+        novo_conta_bancaria = await RepoContaBancariaEscrita.adicionar(
+            session=session,
+            conta_bancaria=novo_conta_bancaria,
+            tipo_operacao=TipoOperacao.INSERCAO,
+        )
+
         return novo_conta_bancaria
 
     @staticmethod

@@ -14,7 +14,7 @@ from contextos_de_negocios.cliente.repositorio import (
     RepoClienteEscrita,
 )
 from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
-from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
+from contextos_de_negocios.utils.tipos_basicos import TipoOperacao, CPF
 
 
 class ClienteControllers:
@@ -23,6 +23,8 @@ class ClienteControllers:
         session: AsyncSession,
         cliente: CadastrarEAtualizarCliente,
     ) -> Cliente:
+        CPF(cliente.cpf)
+
         cliente_no_banco = await RepoClienteLeitura.consultar_por_cpf(
             session=session, cpf=cliente.cpf
         )
@@ -47,6 +49,8 @@ class ClienteControllers:
     async def atualizar_por_id(
         session: AsyncSession, id: Uuid, cliente_att: CadastrarEAtualizarCliente
     ) -> Cliente:
+        CPF(cliente_att.cpf)
+
         cliente = await RepoClienteLeitura.consultar_por_id(session=session, id=id)
 
         if not cliente:

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, UUID4, field_validator
 
+from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
 from contextos_de_negocios.transacao_bancaria.objetos_de_valor import TipoTransacao
 
 
@@ -14,7 +15,6 @@ class CadastrarTransacaoBancaria(BaseModel):
 
     @field_validator("valor", mode="before")
     def formatar_saldo(cls, v):
-        # Define o saldo com duas casas decimais
         return Decimal(v).quantize(Decimal("0.00"))
 
 
@@ -28,11 +28,10 @@ class LerTransacaoBancaria(BaseModel):
 
     @field_validator("valor", mode="before")
     def formatar_saldo(cls, v):
-        # Define o saldo com duas casas decimais
         return Decimal(v).quantize(Decimal("0.00"))
 
     @staticmethod
-    def from_transacao(transacao: "TransacaoBancaria"):
+    def from_transacao(transacao: TransacaoBancaria):
         return LerTransacaoBancaria(
             id=transacao.id,
             tipo=transacao.tipo,

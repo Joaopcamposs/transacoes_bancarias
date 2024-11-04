@@ -25,3 +25,9 @@ docker-logs:
 
 docker-build-up-compose:
 	docker-compose -f infra/docker-compose.yml up --build -d
+
+exportar-dependencias:
+	pip freeze > infra/requirements.txt
+
+instalar-dependencias:
+	pip install -r infra/requirements.txt
