@@ -2,8 +2,8 @@ from fastapi import Depends, APIRouter
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.transacao_bancaria.controllers import (
-    TransacaoBancariaControllers,
+from contextos_de_negocios.transacao_bancaria.executores import (
+    cadastrar_transacao_bancaria,
 )
 from contextos_de_negocios.transacao_bancaria.exceptions import (
     TransacaoBancariaNaoEncontrado,
@@ -54,7 +54,7 @@ class TransacaoBancariaRoutes:
         novo_transacao_bancaria: CadastrarTransacaoBancaria,
         session: AsyncSession = Depends(get_db),
     ):
-        transacao_bancaria = await TransacaoBancariaControllers.cadastrar(
+        transacao_bancaria = await cadastrar_transacao_bancaria(
             session=session, transacao_bancaria=novo_transacao_bancaria
         )
         return transacao_bancaria

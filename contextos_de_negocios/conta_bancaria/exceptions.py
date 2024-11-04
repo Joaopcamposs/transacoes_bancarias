@@ -31,3 +31,8 @@ class ErroAoAtualizarContaBancaria(HTTPException):
 class ErroAoDeletarContaBancaria(HTTPException):
     detail: str = "Erro ao deletar conta bancaria."
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
+class SaldoInsuficienteParaRealizarTransacao(HTTPException):
+    detail: str = "Saldo insuficiente para realizar a transação."
+    status_code: int = status.HTTP_400_BAD_REQUEST

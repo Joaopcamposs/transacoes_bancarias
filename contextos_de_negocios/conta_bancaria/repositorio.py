@@ -27,12 +27,16 @@ class RepoContaBancariaLeitura:
 
     @staticmethod
     async def consultar_por_id(session: AsyncSession, id: Uuid) -> ContaBancaria | None:
-        conta_bancaria = await (
-            select(ContaBancaria)
-            .options(
-                joinedload(ContaBancaria.transacoes)
-            )  # Carrega transacoes antecipadamente
-            .where(ContaBancaria.id == id)
+        conta_bancaria = (
+            (
+                await session.execute(
+                    select(ContaBancaria)
+                    .options(joinedload(ContaBancaria.transacoes))
+                    .filter_by(id=id)
+                )
+            )
+            .unique()
+            .scalar_one_or_none()
         )
         return conta_bancaria
 
@@ -41,13 +45,44 @@ class RepoContaBancariaLeitura:
         session: AsyncSession, numero_da_conta: str
     ) -> ContaBancaria | None:
         conta_bancaria = (
-            await session.execute(
-                select(ContaBancaria)
-                .options(joinedload(ContaBancaria.transacoes))
-                .filter_by(numero_da_conta=numero_da_conta)
+            (
+                await session.execute(
+                    select(ContaBancaria)
+                    .options(joinedload(ContaBancaria.transacoes))
+                    .filter_by(numero_da_conta=numero_da_conta)
+                )
             )
-        ).scalar_one_or_none()
+            .unique()
+            .scalar_one_or_none()
+        )
         return conta_bancaria
+
+
+class RepoContaBancariaDominio:
+    @staticmethod
+    async def consultar_por_numero_da_conta(
+        session: AsyncSession, numero_da_conta: str
+    ) -> Conta | None:
+        conta_bancaria = (
+            (
+                await session.execute(
+                    select(ContaBancaria).filter_by(numero_da_conta=numero_da_conta)
+                )
+            )
+            .unique()
+            .scalar_one_or_none()
+        )
+
+        if not conta_bancaria:
+            return None
+
+        agregado = Conta(
+            id=conta_bancaria.id,
+            numero_da_conta=conta_bancaria.numero_da_conta,
+            saldo=conta_bancaria.saldo,
+            cpf_cliente=conta_bancaria.cpf_cliente,
+        )
+        return agregado
 
 
 class RepoContaBancariaEscrita:

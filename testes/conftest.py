@@ -9,6 +9,12 @@ from contextos_de_negocios.utils.constantes import SQLITE_TESTE
 from infra.database import get_db, Base
 from contextos_de_negocios.main import app
 from testes import override_get_db
+from testes.mocks import (
+    mock_cliente,
+    mock_cliente_gen,
+    mock_usuario_api,
+    mock_conta_bancaria,
+)
 
 
 @pytest.fixture
