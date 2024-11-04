@@ -8,7 +8,7 @@ SQLITE_TESTE = "sqlite+aiosqlite:///test_database.db"
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_USER = os.getenv("DB_USER", "postgres")
-DB_NAME = os.getenv("DB_NAME", "transacoes_bancaria")
+DB_NAME = os.getenv("DB_NAME", "transacoes_bancarias")
 
 SENTRY_DSN = os.getenv("SENTRY_DSN", default="")
 
