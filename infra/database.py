@@ -20,11 +20,11 @@ def obter_uri_do_banco_de_dados(eh_teste: bool = False) -> str:
         return SQLITE_TESTE
 
     host = DB_HOST
-    port = 54322 if host == "localhost" and not eh_teste else 5432
+    port = 54321 if host == "localhost" and not eh_teste else 5432
     password = DB_PASSWORD
     user = DB_USER
     db_name = DB_NAME
-    database_uri = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db_name}"
+    database_uri = f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{db_name}"
     return database_uri
 
 
@@ -39,6 +39,9 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSes
 
 
 async def get_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     async with SessionLocal() as session:
         yield session
 

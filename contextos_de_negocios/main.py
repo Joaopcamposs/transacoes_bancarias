@@ -2,9 +2,7 @@ import sentry_sdk
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-import infra.database
 from contextos_de_negocios.utils.constantes import SENTRY_DSN
-from infra.database import engine, criar_primeiro_usuario
 
 from contextos_de_negocios.servicos.routes import router as servicos_router
 from contextos_de_negocios.conta_bancaria.routes import router as conta_bancaria_router
@@ -45,13 +43,6 @@ async def test():
 async def trigger_error():
     # apenas para testar o sentry
     return 1 / 0
-
-
-@app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(infra.database.Base.metadata.create_all)
-    await criar_primeiro_usuario()
 
 
 # CORS
