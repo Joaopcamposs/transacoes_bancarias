@@ -1,11 +1,10 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from contextos_de_negocios.utils.constantes import SQLITE_TESTE
-from infra.database import Base
+from infra.database import Base, obter_uri_do_banco_de_dados
 
 override_engine = create_async_engine(
-    url=SQLITE_TESTE,
+    url=obter_uri_do_banco_de_dados(eh_teste=True),
     isolation_level="SERIALIZABLE",
     future=True,
 )
