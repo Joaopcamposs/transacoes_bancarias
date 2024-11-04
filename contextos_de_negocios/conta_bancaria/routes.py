@@ -11,8 +11,10 @@ from contextos_de_negocios.conta_bancaria.schemas import (
     CadastrarContaBancaria,
     AtualizarContaBancaria,
     LerContaBancaria,
+    LerContaBancariaETransacoes,
 )
 from contextos_de_negocios.servicos.controllers import Servicos
+from contextos_de_negocios.transacao_bancaria.schemas import LerTransacaoBancaria
 from infra.database import get_db
 
 router = APIRouter(
@@ -24,11 +26,15 @@ router = APIRouter(
 
 class ContaBancariaRoutes:
     @staticmethod
-    @router.get("/conta_bancarias", response_model=list[LerContaBancaria])
+    @router.get(
+        "/conta_bancarias",
+        response_model=list[LerContaBancaria] | LerContaBancariaETransacoes,
+    )
     async def consultar_conta_bancarias(
         session: AsyncSession = Depends(get_db),
         id: UUID4 | None = None,
         numero_da_conta: str | None = None,
+        listar_transacoes: bool = False,
     ):
         if id:
             conta_bancarias = [
@@ -47,6 +53,18 @@ class ContaBancariaRoutes:
 
         if not conta_bancarias or conta_bancarias == [None]:
             raise ContaBancariaNaoEncontrado
+
+        if listar_transacoes:
+            return LerContaBancariaETransacoes(
+                contas=[
+                    LerContaBancaria.from_conta(conta) for conta in conta_bancarias
+                ],
+                transacoes=[
+                    LerTransacaoBancaria.from_transacao(transacao)
+                    for conta in conta_bancarias
+                    for transacao in conta.transacoes
+                ],
+            )
 
         return conta_bancarias
 

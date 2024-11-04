@@ -24,16 +24,18 @@ class TransacaoBancariaControllers:
         if transacao_bancaria.valor < 0:
             raise ValorDaTransacaoNegativo
 
-        conta_origem = RepoContaBancariaLeitura.consultar_por_numero_da_conta(
+        conta_origem = await RepoContaBancariaLeitura.consultar_por_numero_da_conta(
             session=session, numero_da_conta=transacao_bancaria.numero_da_conta
         )
         if not conta_origem:
             raise ContaBancariaNaoEncontrado
 
         if transacao_bancaria.numero_da_conta_destino:
-            conta_destino = RepoContaBancariaLeitura.consultar_por_numero_da_conta(
-                session=session,
-                numero_da_conta=transacao_bancaria.numero_da_conta_destino,
+            conta_destino = (
+                await RepoContaBancariaLeitura.consultar_por_numero_da_conta(
+                    session=session,
+                    numero_da_conta=transacao_bancaria.numero_da_conta_destino,
+                )
             )
             if not conta_destino:
                 raise ContaBancariaNaoEncontrado

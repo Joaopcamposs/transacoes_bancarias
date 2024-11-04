@@ -30,3 +30,14 @@ class LerTransacaoBancaria(BaseModel):
     def formatar_saldo(cls, v):
         # Define o saldo com duas casas decimais
         return Decimal(v).quantize(Decimal("0.00"))
+
+    @staticmethod
+    def from_transacao(transacao: "TransacaoBancaria"):
+        return LerTransacaoBancaria(
+            id=transacao.id,
+            tipo=transacao.tipo,
+            valor=transacao.valor,
+            data=transacao.data,
+            numero_da_conta=transacao.numero_da_conta,
+            numero_da_conta_destino=transacao.numero_da_conta_destino,
+        )
