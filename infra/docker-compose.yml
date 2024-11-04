@@ -6,9 +6,9 @@ services:
     image: postgres:16
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=transacoes_bancarias
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - "54321:5432"
     healthcheck:
@@ -25,8 +25,8 @@ services:
     depends_on:
       - postgres_transacoes_bancarias
     environment:
-      - DB_HOST=postgres
-      - DB_PASSWORD=abc123
+      - DB_HOST=postgres_transacoes_bancarias
+      - DB_PASSWORD=${DB_PASSWORD}
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
     ports:
