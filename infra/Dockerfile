@@ -22,7 +22,7 @@ ENV LC_ALL pt_BR.UTF-8
 RUN python -m pip install --upgrade pip
 
 # instalar dependencias do python
-RUN pip install -r infra/requirements.txt
+RUN pip install -r infra/requirements.txt || pip install -r requirements.txt
 
 # expor a porta
 EXPOSE 8000
