@@ -6,12 +6,12 @@ WORKDIR /transacoes_bancarias
 # copiar projeto
 COPY . .
 
-## instalar dependencias
-#RUN apt-get update && apt-get -y install python3-lxml python3-dev && apt-get -y install nginx && apt-get clean
-#
-## instalar dependencias adicionais para aws
-#RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
-#    && localedef -i pt_BR -c -f UTF-8 -A /usr/share/locale/locale.alias pt_BR.UTF-8
+# instalar dependencias
+RUN apt-get update && apt-get -y install python3-lxml python3-dev && apt-get -y install nginx && apt-get clean
+
+# instalar dependencias adicionais para aws
+RUN apt-get update && apt-get install -y locales && rm -rf /var/lib/apt/lists/* \
+    && localedef -i pt_BR -c -f UTF-8 -A /usr/share/locale/locale.alias pt_BR.UTF-8
 
 # configurar variáveis de ambiente de linguagem e horario
 ENV LANG pt_BR.UTF-8
