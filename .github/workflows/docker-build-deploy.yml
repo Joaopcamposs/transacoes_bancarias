@@ -39,9 +39,9 @@ jobs:
       - name: Build and push Docker fastapi image
         uses: docker/build-push-action@v5
         with:
-          context: ./infra
+          context: ./
           push: true
-          dockerfile: ./infra/Dockerfile
+          dockerfile: infra/Dockerfile
           tags: joaopcamposs/transacoes_bancarias:latest
 
   deploy:
