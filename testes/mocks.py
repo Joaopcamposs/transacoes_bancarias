@@ -7,6 +7,7 @@ import pytest_asyncio
 from pydantic import UUID4
 
 from contextos_de_negocios.cliente.controllers import ClienteControllers
+from contextos_de_negocios.cliente.models import Cliente
 from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
 from contextos_de_negocios.conta_bancaria.controllers import ContaBancariaControllers
 from contextos_de_negocios.conta_bancaria.schemas import CadastrarContaBancaria
@@ -77,14 +78,14 @@ def mock_cliente_gen() -> dict:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def mock_cliente(mock_cliente_gen, session_factory) -> str:
+async def mock_cliente(mock_cliente_gen, session_factory) -> Cliente:
     dados_para_cadastrar = CadastrarEAtualizarCliente(**mock_cliente_gen)
     async with session_factory() as session:
-        await ClienteControllers.cadastrar(
+        cliente = await ClienteControllers.cadastrar(
             session=session, cliente=dados_para_cadastrar
         )
 
-    return dados_para_cadastrar.cpf
+    return cliente
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -95,7 +96,7 @@ async def mock_conta_bancaria(mock_cliente, session_factory):
         dados_para_cadastrar = CadastrarContaBancaria(
             numero_da_conta=numero_da_conta or str(randint(100000, 999999)),
             saldo=saldo or Decimal(0.0),
-            cpf_cliente=mock_cliente,
+            cpf_cliente=mock_cliente.cpf,
         )
         async with session_factory() as session:
             await ContaBancariaControllers.cadastrar(
