@@ -55,7 +55,10 @@ async def startup():
 
 
 # CORS
-origins: list = []
+origins: list = [
+    "http://localhost",
+    "http://18.117.123.228",
+]
 
 app.add_middleware(
     CORSMiddleware,

@@ -66,25 +66,25 @@ jobs:
         env:
           INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && git pull'
+          ssh -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && git pull'
 
       - name: Pull Docker image transacoes bancarias
         env:
           INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_pull'
+          ssh -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_pull'
 
       - name: Stop running container transacoes bancaria
         env:
           INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_stop'
+          ssh -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_stop'
 
       - name: Run new container transacoes bancaria
         env:
           INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker-build-up-compose'  
+          ssh -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker-build-up-compose'  
 
       - name: Test api IP_PUBLIC route test
         env:
@@ -104,4 +104,4 @@ jobs:
         env:
           INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_clean'
+          ssh -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias && make docker_clean'
