@@ -105,3 +105,14 @@ async def mock_conta_bancaria(mock_cliente, session_factory):
         return dados_para_cadastrar
 
     return _create_mock_conta
+
+
+@pytest.fixture(scope="function")
+def mock_usuario_gen() -> dict:
+    return {
+        "nome": "Usuário Teste",
+        "email": "joao@email.com",
+        "senha": "1234",
+        "adm": False,
+        "ativo": True,
+    }

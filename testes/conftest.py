@@ -14,6 +14,7 @@ from testes.mocks import (
     mock_cliente_gen,
     mock_usuario_api,
     mock_conta_bancaria,
+    mock_usuario_gen,
 )
 
 
