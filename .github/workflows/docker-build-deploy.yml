@@ -41,7 +41,7 @@ jobs:
         with:
           context: .
           push: true
-          dockerfile: infra/Dockerfile
+          dockerfile: Dockerfile
           tags: joaopcamposs/transacoes_bancarias:latest
 
   deploy:
