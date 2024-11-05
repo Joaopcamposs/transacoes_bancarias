@@ -10,6 +10,7 @@ from contextos_de_negocios.cliente.controllers import ClienteControllers
 from contextos_de_negocios.cliente.models import Cliente
 from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
 from contextos_de_negocios.conta_bancaria.controllers import ContaBancariaControllers
+from contextos_de_negocios.conta_bancaria.models import ContaBancaria
 from contextos_de_negocios.conta_bancaria.schemas import CadastrarContaBancaria
 from contextos_de_negocios.servicos.controllers import Servicos
 from contextos_de_negocios.utils.tipos_basicos import CPF
@@ -88,21 +89,30 @@ async def mock_cliente(mock_cliente_gen, session_factory) -> Cliente:
     return cliente
 
 
+@pytest.fixture(scope="function")
+def mock_conta_bancaria_gen() -> dict:
+    return {
+        "numero_da_conta": "1234",
+        "saldo": "0.00",
+        "cpf_cliente": CPF.gerar(),
+    }
+
+
 @pytest_asyncio.fixture(scope="function")
 async def mock_conta_bancaria(mock_cliente, session_factory):
     async def _create_mock_conta(
         numero_da_conta: str | None = None, saldo: Decimal | None = None
-    ):
+    ) -> ContaBancaria:
         dados_para_cadastrar = CadastrarContaBancaria(
             numero_da_conta=numero_da_conta or str(randint(100000, 999999)),
             saldo=saldo or Decimal(0.0),
             cpf_cliente=mock_cliente.cpf,
         )
         async with session_factory() as session:
-            await ContaBancariaControllers.cadastrar(
+            conta = await ContaBancariaControllers.cadastrar(
                 session=session, conta_bancaria=dados_para_cadastrar
             )
-        return dados_para_cadastrar
+        return conta
 
     return _create_mock_conta
 
