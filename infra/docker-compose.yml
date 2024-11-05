@@ -19,9 +19,7 @@ services:
 
   fastapi:
     container_name: fastapi
-    build:
-        context: ../
-        dockerfile: infra/Dockerfile
+    image: joaopcamposs/transacoes_bancarias:latest
     depends_on:
       - postgres_transacoes_bancarias
     environment:
