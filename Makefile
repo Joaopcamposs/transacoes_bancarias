@@ -32,7 +32,7 @@ docker-build-up-compose:
 	docker-compose -f infra/docker-compose.yml up --build -d
 
 docker-compose-run:
-	docker-compose --env-file .env up -d
+	docker-compose -f infra/docker-compose.yml --env-file .env up -d
 
 exportar-dependencias:
 	pip freeze > infra/requirements.txt
