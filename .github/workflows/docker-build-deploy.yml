@@ -84,10 +84,11 @@ jobs:
         env:
           INSTANCE_AWS: ${{ secrets.INSTANCE_AWS }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS 'cd ~/transacoes_bancarias/infra'
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          ssh -o StrictHostKeyChecking=no -i key.pem $INSTANCE_AWS \
+            'cd ~/transacoes_bancarias/infra && \
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env && \
+            echo "DB_USER=${{ secrets.DB_USER }}" >> .env && \
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env'
 
       - name: Run new container transacoes bancaria
         env:
