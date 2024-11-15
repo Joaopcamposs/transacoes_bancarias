@@ -2,20 +2,18 @@ from fastapi import Depends, APIRouter
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.transacao_bancaria.executores import (
+from contextos_de_negocios.servicos.executores.transacao_bancaria import (
     cadastrar_transacao_bancaria,
 )
-from contextos_de_negocios.transacao_bancaria.exceptions import (
-    TransacaoBancariaNaoEncontrado,
-)
-from contextos_de_negocios.transacao_bancaria.repositorio import (
+from contextos_de_negocios.dominio.exceptions import TransacaoBancariaNaoEncontrado
+from contextos_de_negocios.repositorio.repo_consulta.transacao_bancaria import (
     RepoTransacaoBancariaLeitura,
 )
-from contextos_de_negocios.transacao_bancaria.schemas import (
+from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     CadastrarTransacaoBancaria,
     LerTransacaoBancaria,
 )
-from contextos_de_negocios.servicos.controllers import Servicos
+from contextos_de_negocios.servicos.executores.seguranca import Servicos
 from infra.database import get_db
 
 router = APIRouter(

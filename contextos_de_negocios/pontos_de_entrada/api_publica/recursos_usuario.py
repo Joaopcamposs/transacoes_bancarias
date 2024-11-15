@@ -2,13 +2,14 @@ from fastapi import Depends, APIRouter
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.servicos.controllers import Servicos
-from contextos_de_negocios.usuario.controllers import UsuarioControllers
-from contextos_de_negocios.usuario.exceptions import (
-    UsuarioNaoEncontrado,
+from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
+from contextos_de_negocios.dominio.exceptions import UsuarioNaoEncontrado
+from contextos_de_negocios.repositorio.repo_consulta.usuario import RepoUsuarioLeitura
+from contextos_de_negocios.dominio.entidades.usuario import (
+    CadastrarEAtualizarUsuario,
+    LerUsuario,
 )
-from contextos_de_negocios.usuario.repositorio import RepoUsuarioLeitura
-from contextos_de_negocios.usuario.schemas import CadastrarEAtualizarUsuario, LerUsuario
 from infra.database import get_db
 
 router = APIRouter(

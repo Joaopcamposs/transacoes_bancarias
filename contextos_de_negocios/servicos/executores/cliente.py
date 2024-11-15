@@ -1,19 +1,19 @@
 from sqlalchemy import Uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.cliente.exceptions import (
+from contextos_de_negocios.dominio.exceptions import (
     ClienteJaCadastrado,
     ClienteNaoEncontrado,
     ErroAoDeletarCliente,
     ErroAoAtualizarCliente,
     ErroAoCadastrarCliente,
 )
-from contextos_de_negocios.cliente.models import Cliente
-from contextos_de_negocios.cliente.repositorio import (
+from contextos_de_negocios.repositorio.orm.cliente import Cliente
+from contextos_de_negocios.repositorio.repo_consulta.cliente import (
     RepoClienteLeitura,
-    RepoClienteEscrita,
 )
-from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
+from contextos_de_negocios.repositorio.repo_dominio.cliente import RepoClienteEscrita
+from contextos_de_negocios.dominio.entidades.cliente import CadastrarEAtualizarCliente
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao, CPF
 
 

@@ -3,13 +3,17 @@ from uuid import UUID, uuid4
 
 from _decimal import Decimal
 
-from contextos_de_negocios.conta_bancaria.exceptions import (
+from contextos_de_negocios.dominio.exceptions import (
     SaldoInsuficienteParaRealizarTransacao,
 )
-from contextos_de_negocios.conta_bancaria.models import ContaBancaria
-from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
-from contextos_de_negocios.transacao_bancaria.objetos_de_valor import TipoTransacao
-from contextos_de_negocios.transacao_bancaria.schemas import CadastrarTransacaoBancaria
+from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
+from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
+from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
+    TipoTransacao,
+)
+from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
+    CadastrarTransacaoBancaria,
+)
 from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta, CPF
 
 

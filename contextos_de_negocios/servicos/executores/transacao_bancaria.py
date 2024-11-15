@@ -1,15 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.conta_bancaria.exceptions import ContaBancariaNaoEncontrado
-from contextos_de_negocios.conta_bancaria.repositorio import (
+from contextos_de_negocios.dominio.exceptions import ContaBancariaNaoEncontrado
+from contextos_de_negocios.repositorio.repo_consulta.conta_bancaria import (
     RepoContaBancariaLeitura,
+)
+from contextos_de_negocios.repositorio.repo_dominio.conta_bancaria import (
     RepoContaBancariaDominio,
 )
-from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
-from contextos_de_negocios.transacao_bancaria.repositorio import (
+from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
+from contextos_de_negocios.repositorio.repo_dominio.transacao_bancaria import (
     RepoTransacaoBancariaEscrita,
 )
-from contextos_de_negocios.transacao_bancaria.schemas import (
+from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     CadastrarTransacaoBancaria,
 )
 

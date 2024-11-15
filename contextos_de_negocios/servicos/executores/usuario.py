@@ -2,16 +2,16 @@ from sqlalchemy import Uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import status, HTTPException
 
-from contextos_de_negocios.usuario.exceptions import (
-    UsuarioJaCadastrado,
+from contextos_de_negocios.dominio.exceptions import (
     UsuarioNaoEncontrado,
+    UsuarioJaCadastrado,
 )
-from contextos_de_negocios.usuario.models import Usuario
-from contextos_de_negocios.usuario.repositorio import (
+from contextos_de_negocios.repositorio.orm.usuario import Usuario
+from contextos_de_negocios.repositorio.repo_consulta.usuario import (
     RepoUsuarioLeitura,
-    RepoUsuarioEscrita,
 )
-from contextos_de_negocios.usuario.schemas import CadastrarEAtualizarUsuario
+from contextos_de_negocios.repositorio.repo_dominio.usuario import RepoUsuarioEscrita
+from contextos_de_negocios.dominio.entidades.usuario import CadastrarEAtualizarUsuario
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 
 
@@ -22,7 +22,7 @@ class UsuarioControllers:
         usuario: CadastrarEAtualizarUsuario,
         criptografar_senha: bool = True,
     ) -> Usuario:
-        from contextos_de_negocios.servicos.controllers import Servicos
+        from contextos_de_negocios.servicos.executores.seguranca import Servicos
 
         usuario_no_banco = await RepoUsuarioLeitura.consultar_por_email(
             session=session, email=usuario.email
@@ -53,7 +53,7 @@ class UsuarioControllers:
     async def atualizar_por_id(
         session: AsyncSession, id: Uuid, usuario_att: CadastrarEAtualizarUsuario
     ) -> Usuario:
-        from contextos_de_negocios.servicos.controllers import Servicos
+        from contextos_de_negocios.servicos.executores.seguranca import Servicos
 
         usuario = await RepoUsuarioLeitura.consultar_por_id(session=session, id=id)
 

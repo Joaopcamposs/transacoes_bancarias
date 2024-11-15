@@ -8,13 +8,15 @@ from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
-from contextos_de_negocios.servicos.exceptions import NaoFoiPossivelValidarAsCredenciais
-from contextos_de_negocios.usuario.exceptions import PermissaoFaltando
-from contextos_de_negocios.usuario.models import Usuario
+from contextos_de_negocios.dominio.exceptions import (
+    PermissaoFaltando,
+    NaoFoiPossivelValidarAsCredenciais,
+)
+from contextos_de_negocios.repositorio.orm.usuario import Usuario
 from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM
 from infra.database import get_db
-from contextos_de_negocios.servicos.schemas import TokenData
-from contextos_de_negocios.usuario.repositorio import RepoUsuarioLeitura
+from contextos_de_negocios.dominio.entidades.seguranca import TokenData
+from contextos_de_negocios.repositorio.repo_consulta.usuario import RepoUsuarioLeitura
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
 

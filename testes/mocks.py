@@ -6,13 +6,17 @@ import pytest
 import pytest_asyncio
 from pydantic import UUID4
 
-from contextos_de_negocios.cliente.controllers import ClienteControllers
-from contextos_de_negocios.cliente.models import Cliente
-from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
-from contextos_de_negocios.conta_bancaria.controllers import ContaBancariaControllers
-from contextos_de_negocios.conta_bancaria.models import ContaBancaria
-from contextos_de_negocios.conta_bancaria.schemas import CadastrarContaBancaria
-from contextos_de_negocios.servicos.controllers import Servicos
+from contextos_de_negocios.servicos.executores.cliente import ClienteControllers
+from contextos_de_negocios.repositorio.orm.cliente import Cliente
+from contextos_de_negocios.dominio.entidades.cliente import CadastrarEAtualizarCliente
+from contextos_de_negocios.servicos.executores.conta_bancaria import (
+    ContaBancariaControllers,
+)
+from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
+from contextos_de_negocios.dominio.entidades.conta_bancaria import (
+    CadastrarContaBancaria,
+)
+from contextos_de_negocios.servicos.executores.seguranca import Servicos
 from contextos_de_negocios.utils.tipos_basicos import CPF
 
 
@@ -40,9 +44,13 @@ async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
 
     usuario_mock.senha = Servicos.criptografar_senha(usuario_mock.senha)
 
-    from contextos_de_negocios.usuario.schemas import CadastrarEAtualizarUsuario
-    from contextos_de_negocios.usuario.repositorio import RepoUsuarioLeitura
-    from contextos_de_negocios.usuario.controllers import UsuarioControllers
+    from contextos_de_negocios.dominio.entidades.usuario import (
+        CadastrarEAtualizarUsuario,
+    )
+    from contextos_de_negocios.repositorio.repo_consulta.usuario import (
+        RepoUsuarioLeitura,
+    )
+    from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
 
     async with session_factory() as session:
         novo_usuario = CadastrarEAtualizarUsuario(

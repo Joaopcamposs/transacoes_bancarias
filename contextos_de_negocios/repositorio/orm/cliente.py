@@ -3,7 +3,7 @@ from uuid import uuid4
 from sqlalchemy import Column, Uuid, String
 from sqlalchemy.orm import relationship
 
-from contextos_de_negocios.conta_bancaria.models import ContaBancaria
+from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from infra.database import Base
 
 

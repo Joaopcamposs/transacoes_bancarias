@@ -4,14 +4,14 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.servicos.controllers import Servicos
-from contextos_de_negocios.servicos.exceptions import (
-    CredenciaisIncorretas,
+from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.dominio.exceptions import (
     ErroAoGerarToken,
+    CredenciaisIncorretas,
 )
-from contextos_de_negocios.servicos.schemas import Token
-from contextos_de_negocios.usuario.models import Usuario
-from contextos_de_negocios.usuario.schemas import LerUsuario
+from contextos_de_negocios.dominio.entidades.seguranca import Token
+from contextos_de_negocios.repositorio.orm.usuario import Usuario
+from contextos_de_negocios.dominio.entidades.usuario import LerUsuario
 from contextos_de_negocios.utils.constantes import ACCESS_TOKEN_EXPIRE_MINUTES
 from infra.database import get_db
 

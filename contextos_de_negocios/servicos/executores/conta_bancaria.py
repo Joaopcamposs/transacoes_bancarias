@@ -1,21 +1,23 @@
 from sqlalchemy import Uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.cliente.exceptions import ClienteNaoEncontrado
-from contextos_de_negocios.cliente.repositorio import RepoClienteLeitura
-from contextos_de_negocios.conta_bancaria.agregado import Conta
-from contextos_de_negocios.conta_bancaria.exceptions import (
-    ContaBancariaJaCadastrado,
+from contextos_de_negocios.dominio.exceptions import (
+    ClienteNaoEncontrado,
     ContaBancariaNaoEncontrado,
-    ErroAoDeletarContaBancaria,
+    ContaBancariaJaCadastrado,
     ErroAoAtualizarContaBancaria,
+    ErroAoDeletarContaBancaria,
 )
-from contextos_de_negocios.conta_bancaria.models import ContaBancaria
-from contextos_de_negocios.conta_bancaria.repositorio import (
+from contextos_de_negocios.repositorio.repo_consulta.cliente import RepoClienteLeitura
+from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
+from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
+from contextos_de_negocios.repositorio.repo_consulta.conta_bancaria import (
     RepoContaBancariaLeitura,
+)
+from contextos_de_negocios.repositorio.repo_dominio.conta_bancaria import (
     RepoContaBancariaEscrita,
 )
-from contextos_de_negocios.conta_bancaria.schemas import (
+from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     CadastrarContaBancaria,
     AtualizarContaBancaria,
 )

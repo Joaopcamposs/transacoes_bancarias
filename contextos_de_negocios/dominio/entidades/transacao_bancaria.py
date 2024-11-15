@@ -3,8 +3,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, UUID4, field_validator
 
-from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
-from contextos_de_negocios.transacao_bancaria.objetos_de_valor import TipoTransacao
+from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
+from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
+    TipoTransacao,
+)
 
 
 class CadastrarTransacaoBancaria(BaseModel):
