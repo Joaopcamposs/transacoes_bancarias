@@ -1,27 +1,11 @@
-from typing import Sequence
-
-from sqlalchemy import Uuid, select, update
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.conta_bancaria.models import ContaBancaria
-from contextos_de_negocios.transacao_bancaria.models import TransacaoBancaria
-from contextos_de_negocios.transacao_bancaria.objetos_de_valor import TipoTransacao
-
-
-class RepoTransacaoBancariaLeitura:
-    @staticmethod
-    async def consultar_todos(session: AsyncSession) -> Sequence[TransacaoBancaria]:
-        transacao_bancarias = (
-            (await session.execute(select(TransacaoBancaria))).scalars().all()
-        )
-        return transacao_bancarias
-
-    @staticmethod
-    async def consultar_por_id(
-        session: AsyncSession, id: Uuid
-    ) -> TransacaoBancaria | None:
-        transacao_bancaria = await session.get(TransacaoBancaria, id)
-        return transacao_bancaria
+from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
+from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
+from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
+    TipoTransacao,
+)
 
 
 class RepoTransacaoBancariaEscrita:
