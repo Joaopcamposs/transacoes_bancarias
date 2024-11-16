@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel, UUID4, field_validator
 
@@ -7,6 +9,7 @@ from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBa
 from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
     TipoTransacao,
 )
+from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta
 
 
 class CadastrarTransacaoBancaria(BaseModel):
@@ -42,3 +45,13 @@ class LerTransacaoBancaria(BaseModel):
             numero_da_conta=transacao.numero_da_conta,
             numero_da_conta_destino=transacao.numero_da_conta_destino,
         )
+
+
+@dataclass(frozen=True)
+class TransacaoEntidade:
+    tipo: TipoTransacao
+    valor: Decimal
+    data: datetime
+    numero_da_conta: NumeroDaConta
+    id: UUID | None = None
+    numero_da_conta_destino: NumeroDaConta | None = None

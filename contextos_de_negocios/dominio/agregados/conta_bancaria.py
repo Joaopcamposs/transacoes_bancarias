@@ -3,6 +3,7 @@ from uuid import UUID
 
 from _decimal import Decimal
 
+from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.exceptions import (
     SaldoInsuficienteParaRealizarTransacao,
 )
@@ -13,6 +14,7 @@ from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     CadastrarTransacaoBancaria,
 )
+from contextos_de_negocios.utils.constantes import DATA_AGORA
 from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta, CPF
 
 
@@ -43,7 +45,7 @@ class Conta:
 
     def nova_transacao(
         self, transacao_bancaria: CadastrarTransacaoBancaria
-    ) -> TransacaoBancaria:
+    ) -> Transacao:
         self._validar_valor_da_operacao(transacao_bancaria.valor)
 
         match transacao_bancaria.tipo:
@@ -58,35 +60,38 @@ class Conta:
             case _:
                 raise ValueError("Tipo de transação inválido")
 
-    def realizar_saque(self, valor: Decimal) -> TransacaoBancaria:
+    def realizar_saque(self, valor: Decimal) -> Transacao:
         self._validar_saldo(valor)
 
         self.saldo -= valor
-        return TransacaoBancaria(
-            tipo=TipoTransacao.SAQUE.value,
+        return Transacao.retornar_agregado_para_cadastro(
+            tipo=TipoTransacao.SAQUE,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
+            data=DATA_AGORA,
         )
 
-    def realizar_deposito(self, valor: Decimal) -> TransacaoBancaria:
+    def realizar_deposito(self, valor: Decimal) -> Transacao:
         self.saldo += valor
-        return TransacaoBancaria(
-            tipo=TipoTransacao.DEPOSITO.value,
+        return Transacao.retornar_agregado_para_cadastro(
+            tipo=TipoTransacao.DEPOSITO,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
+            data=DATA_AGORA,
         )
 
     def realizar_transferencia(
         self, valor: Decimal, numero_da_conta_destino: str
-    ) -> TransacaoBancaria:
+    ) -> Transacao:
         self._validar_saldo(valor)
 
         self.saldo -= valor
-        return TransacaoBancaria(
-            tipo=TipoTransacao.TRANSFERENCIA.value,
+        return Transacao.retornar_agregado_para_cadastro(
+            tipo=TipoTransacao.TRANSFERENCIA,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
             numero_da_conta_destino=numero_da_conta_destino,
+            data=DATA_AGORA,
         )
 
     def cadastrar(self) -> None: ...

@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import pytz
 from dotenv import load_dotenv
 import os
 
@@ -25,3 +28,5 @@ EMAIL_PRIMEIRO_USUARIO = os.getenv("EMAIL_PRIMEIRO_USUARIO")
 SENHA_PRIMEIRO_USUARIO = os.getenv("SENHA_PRIMEIRO_USUARIO")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+DATA_AGORA = datetime.now(pytz.timezone("America/Sao_Paulo"))

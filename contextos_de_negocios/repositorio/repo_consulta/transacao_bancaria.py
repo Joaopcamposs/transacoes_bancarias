@@ -1,22 +1,53 @@
 from typing import Sequence
 
-from sqlalchemy import Uuid, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
+from contextos_de_negocios.dominio.entidades.transacao_bancaria import TransacaoEntidade
 from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
+from libs.ddd.adaptadores.repositorio import RepositorioConsulta
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class TransacaoBancariaRepoConsulta:
-    @staticmethod
-    async def consultar_todos(session: AsyncSession) -> Sequence[TransacaoBancaria]:
-        transacao_bancarias = (
-            (await session.execute(select(TransacaoBancaria))).scalars().all()
+class TransacaoBancariaRepoConsulta(RepositorioConsulta):
+    async def consultar_por_filtros(
+        self, filtros: Filtros
+    ) -> Sequence[TransacaoEntidade]:
+        transacaos = (
+            (await self.session.execute(select(TransacaoBancaria).filter_by(**filtros)))
+            .scalars()
+            .all()
         )
-        return transacao_bancarias
 
-    @staticmethod
-    async def consultar_por_id(
-        session: AsyncSession, id: Uuid
-    ) -> TransacaoBancaria | None:
-        transacao_bancaria = await session.get(TransacaoBancaria, id)
-        return transacao_bancaria
+        transacaos_entidade = [
+            TransacaoEntidade(
+                id=transacao.id,
+                tipo=transacao.tipo,
+                valor=transacao.valor,
+                data=transacao.data,
+                numero_da_conta=transacao.numero_da_conta,
+                numero_da_conta_destino=transacao.numero_da_conta_destino,
+            )
+            for transacao in transacaos
+        ]
+
+        return transacaos_entidade
+
+    async def consultar_um_por_filtros(
+        self, filtros: Filtros
+    ) -> TransacaoEntidade | None:
+        transacao = (
+            await self.session.execute(select(TransacaoBancaria).filter_by(**filtros))
+        ).scalar_one_or_none()
+        if not transacao:
+            return None
+
+        transacao_entidade = TransacaoEntidade(
+            id=transacao.id,
+            tipo=transacao.tipo,
+            valor=transacao.valor,
+            data=transacao.data,
+            numero_da_conta=transacao.numero_da_conta,
+            numero_da_conta_destino=transacao.numero_da_conta_destino,
+        )
+
+        return transacao_entidade

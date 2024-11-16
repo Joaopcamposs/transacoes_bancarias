@@ -15,6 +15,7 @@ from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
 )
 from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from infra.database import get_db
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 router = APIRouter(
     prefix="/api",
@@ -23,36 +24,34 @@ router = APIRouter(
 )
 
 
-class TransacaoBancariaRoutes:
-    @staticmethod
-    @router.get("/transacao_bancarias", response_model=list[LerTransacaoBancaria])
-    async def consultar_transacao_bancarias(
-        session: AsyncSession = Depends(get_db),
-        id: UUID4 | None = None,
-    ):
-        if id:
-            transacao_bancarias = [
-                await TransacaoBancariaRepoConsulta.consultar_por_id(
-                    session=session, id=id
-                )
-            ]
-        else:
-            transacao_bancarias = await TransacaoBancariaRepoConsulta.consultar_todos(
-                session=session
-            )
+@router.get("/transacao_bancarias", response_model=list[LerTransacaoBancaria])
+async def listar(
+    session: AsyncSession = Depends(get_db),
+    id: UUID4 | None = None,
+    # todo adicionar busca por numero da conta
+):
+    filtros = Filtros(
+        {
+            "id": id,
+        }
+    )
 
-        if not transacao_bancarias or transacao_bancarias == [None]:
-            raise TransacaoBancariaNaoEncontrado
+    transacoes = await TransacaoBancariaRepoConsulta(
+        session=session
+    ).consultar_por_filtros(filtros=filtros)
 
-        return transacao_bancarias
+    if not transacoes:
+        raise TransacaoBancariaNaoEncontrado
 
-    @staticmethod
-    @router.post("/transacao_bancaria", response_model=LerTransacaoBancaria)
-    async def cadastrar_transacao_bancaria(
-        novo_transacao_bancaria: CadastrarTransacaoBancaria,
-        session: AsyncSession = Depends(get_db),
-    ):
-        transacao_bancaria = await cadastrar_transacao_bancaria(
-            session=session, transacao_bancaria=novo_transacao_bancaria
-        )
-        return transacao_bancaria
+    return transacoes
+
+
+@router.post("/transacao_bancaria", response_model=LerTransacaoBancaria)
+async def cadastrar(
+    novo_transacao_bancaria: CadastrarTransacaoBancaria,
+    session: AsyncSession = Depends(get_db),
+):
+    transacao_bancaria = await cadastrar_transacao_bancaria(
+        session=session, transacao_bancaria=novo_transacao_bancaria
+    )
+    return transacao_bancaria
