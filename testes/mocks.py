@@ -16,8 +16,9 @@ from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     CadastrarContaBancaria,
 )
-from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from contextos_de_negocios.utils.tipos_basicos import CPF
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 @dataclass
@@ -33,50 +34,53 @@ class MockUsuarioAPI:
 
 @pytest_asyncio.fixture(scope="function")
 async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
-    usuario_mock = MockUsuarioAPI(
-        nome="Admin",
-        email="admin@email.com",
-        senha="1234",
-        adm=True,
-        ativo=True,
-        token="",
-    )
-
-    usuario_mock.senha = Servicos.criptografar_senha(usuario_mock.senha)
-
     from contextos_de_negocios.dominio.entidades.usuario import (
-        CadastrarEAtualizarUsuario,
+        CadastrarUsuario,
     )
     from contextos_de_negocios.repositorio.repo_consulta.usuario import (
         UsuarioRepoConsulta,
     )
-    from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
+    from contextos_de_negocios.servicos.executores.usuario import cadastrar_usuario
 
     async with session_factory() as session:
-        novo_usuario = CadastrarEAtualizarUsuario(
-            nome=usuario_mock.nome,
-            email=usuario_mock.email,
-            senha=usuario_mock.senha,
-            adm=usuario_mock.adm,
-            ativo=usuario_mock.ativo,
+        novo_usuario = CadastrarUsuario(
+            nome="Admin",
+            email="admin@email.com",
+            senha="1234",
+            adm=True,
+            ativo=True,
         )
 
         usuario_cadastrado = None
-        if len(list(await UsuarioRepoConsulta.consultar_todos(session))) == 0:
-            usuario_cadastrado = await UsuarioControllers.cadastrar(
-                session, novo_usuario
+        if (
+            len(
+                list(
+                    await UsuarioRepoConsulta(session=session).consultar_por_filtros(
+                        Filtros({})
+                    )
+                )
             )
+            == 0
+        ):
+            usuario_cadastrado = await cadastrar_usuario(session, novo_usuario)
             print(usuario_cadastrado)
 
         if not usuario_cadastrado:
-            usuario_cadastrado = await UsuarioRepoConsulta.consultar_por_email(
-                session, novo_usuario.email
-            )
+            usuario_cadastrado = await UsuarioRepoConsulta(
+                session=session
+            ).consultar_um_por_filtros(Filtros({"email": novo_usuario.email}))
 
-        access_token = Servicos.criar_token(data={"sub": usuario_cadastrado.email})
+        access_token = Seguranca.criar_token(data={"sub": usuario_cadastrado.email})
 
-        usuario_mock.id = str(usuario_cadastrado.id)
-        usuario_mock.token = access_token
+        usuario_mock = MockUsuarioAPI(
+            id=usuario_cadastrado.id,
+            nome=usuario_cadastrado.nome,
+            email=usuario_cadastrado.email,
+            senha=novo_usuario.senha,
+            adm=usuario_cadastrado.adm,
+            ativo=usuario_cadastrado.ativo,
+            token=access_token,
+        )
 
         return usuario_mock
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from contextos_de_negocios.dominio.exceptions import (
     ErroAoGerarToken,
     CredenciaisIncorretas,
@@ -22,7 +22,7 @@ class ServicosRoutes:
     @staticmethod
     @router.get("/usuario/me", response_model=LerUsuario)
     async def ler_usuario_atual(
-        usuario_atual: Usuario = Depends(Servicos.obter_usuario_atual),
+        usuario_atual: Usuario = Depends(Seguranca.obter_usuario_atual),
     ):
         return usuario_atual
 
@@ -33,12 +33,12 @@ class ServicosRoutes:
         session: AsyncSession = Depends(get_db),
     ):
         try:
-            usuario = await Servicos.autenticar_usuario(
+            usuario = await Seguranca.autenticar_usuario(
                 session=session, email=form_data.username, senha=form_data.password
             )
             if not usuario:
                 raise CredenciaisIncorretas
-            access_token = Servicos.criar_token(
+            access_token = Seguranca.criar_token(
                 data={"sub": usuario.email},
                 tempo_de_expiracao=ACCESS_TOKEN_EXPIRE_MINUTES,
             )

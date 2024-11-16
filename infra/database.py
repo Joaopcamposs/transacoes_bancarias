@@ -13,6 +13,7 @@ from contextos_de_negocios.utils.constantes import (
     DB_USER,
     DB_NAME,
 )
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 def obter_uri_do_banco_de_dados(eh_teste: bool = False) -> str:
@@ -53,18 +54,20 @@ async def criar_primeiro_usuario() -> None:
         UsuarioRepoConsulta,
     )
     from contextos_de_negocios.dominio.entidades.usuario import (
-        CadastrarEAtualizarUsuario,
+        CadastrarUsuario,
     )
-    from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
+    from contextos_de_negocios.servicos.executores.usuario import cadastrar_usuario
 
     async with SessionLocal() as session:
-        usuarios = await UsuarioRepoConsulta.consultar_todos(session=session)
+        usuarios = await UsuarioRepoConsulta(session=session).consultar_por_filtros(
+            Filtros({})
+        )
         if not usuarios:
-            usuario = CadastrarEAtualizarUsuario(
+            usuario = CadastrarUsuario(
                 nome="Admin",
                 email=EMAIL_PRIMEIRO_USUARIO,
                 senha=SENHA_PRIMEIRO_USUARIO,
                 adm=True,
                 ativo=True,
             )
-            await UsuarioControllers.cadastrar(session=session, usuario=usuario)
+            await cadastrar_usuario(session=session, usuario=usuario)

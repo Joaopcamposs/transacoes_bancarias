@@ -13,13 +13,13 @@ from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     CadastrarTransacaoBancaria,
     LerTransacaoBancaria,
 )
-from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from infra.database import get_db
 
 router = APIRouter(
     prefix="/api",
     tags=["Transacao Bancaria"],
-    dependencies=[Depends(Servicos.obter_usuario_atual)],
+    dependencies=[Depends(Seguranca.obter_usuario_atual)],
 )
 
 

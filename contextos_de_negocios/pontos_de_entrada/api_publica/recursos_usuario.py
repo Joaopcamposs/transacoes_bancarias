@@ -2,101 +2,106 @@ from fastapi import Depends, APIRouter
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contextos_de_negocios.servicos.executores.seguranca import Servicos
-from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
+from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from contextos_de_negocios.dominio.exceptions import UsuarioNaoEncontrado
 from contextos_de_negocios.repositorio.repo_consulta.usuario import UsuarioRepoConsulta
 from contextos_de_negocios.dominio.entidades.usuario import (
-    CadastrarEAtualizarUsuario,
+    CadastrarUsuario,
     LerUsuario,
+    AtualizarUsuario,
+)
+from contextos_de_negocios.servicos.executores.usuario import (
+    remover_usuario,
+    cadastrar_usuario,
+    atualizar_usuario,
 )
 from infra.database import get_db
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 router = APIRouter(
     prefix="/api",
     tags=["Usuarios"],
-    dependencies=[Depends(Servicos.obter_usuario_atual_adm)],
+    dependencies=[Depends(Seguranca.obter_usuario_atual_adm)],
 )
 
 
-class UsuarioRoutes:
-    @staticmethod
-    @router.get("/usuarios", response_model=list[LerUsuario])
-    async def consultar_usuarios(
-        session: AsyncSession = Depends(get_db),
-        id: UUID4 | None = None,
-        email: str | None = None,
-    ):
-        if id:
-            usuarios = [
-                await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
-            ]
-        elif email:
-            usuarios = [
-                await UsuarioRepoConsulta.consultar_por_email(
-                    session=session, email=email
-                )
-            ]
-        else:
-            usuarios = await UsuarioRepoConsulta.consultar_todos(session=session)
+@router.get("/usuarios", response_model=list[LerUsuario])
+async def listar(
+    session: AsyncSession = Depends(get_db),
+    id: UUID4 | None = None,
+    email: str | None = None,
+):
+    filtros = Filtros(
+        {
+            "id": id,
+            "email": email,
+        }
+    )
 
-        if not usuarios or usuarios == [None]:
-            raise UsuarioNaoEncontrado
+    usuarios = await UsuarioRepoConsulta(session=session).consultar_por_filtros(
+        filtros=filtros
+    )
 
-        return usuarios
+    if not usuarios:
+        raise UsuarioNaoEncontrado
 
-    @staticmethod
-    @router.post("/usuario", response_model=LerUsuario)
-    async def cadastrar_usuario(
-        novo_usuario: CadastrarEAtualizarUsuario,
-        session: AsyncSession = Depends(get_db),
-    ):
-        usuario = await UsuarioControllers.cadastrar(
-            session=session, usuario=novo_usuario
-        )
-        return usuario
+    return usuarios
 
-    @staticmethod
-    @router.put("/usuario", response_model=LerUsuario)
-    async def atualizar_usuario(
-        usuario_atualizado: CadastrarEAtualizarUsuario,
-        session: AsyncSession = Depends(get_db),
-        id: UUID4 | None = None,
-        email: str | None = None,
-    ):
-        if id:
-            usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
-        else:
-            usuario = await UsuarioRepoConsulta.consultar_por_email(
-                session=session, email=email
-            )
 
-        if not usuario:
-            raise UsuarioNaoEncontrado
+@router.post("/usuario", response_model=LerUsuario)
+async def cadastrar(
+    novo_usuario: CadastrarUsuario,
+    session: AsyncSession = Depends(get_db),
+):
+    usuario = await cadastrar_usuario(session=session, usuario=novo_usuario)
+    return usuario
 
-        usuario = await UsuarioControllers.atualizar_por_id(
-            session=session, id=usuario.id, usuario_att=usuario_atualizado
-        )
-        return usuario
 
-    @staticmethod
-    @router.delete("/usuario")
-    async def deletar_usuario(
-        session: AsyncSession = Depends(get_db),
-        id: UUID4 | None = None,
-        email: str | None = None,
-    ):
-        if id:
-            usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
-        else:
-            usuario = await UsuarioRepoConsulta.consultar_por_email(
-                session=session, email=email
-            )
+@router.put("/usuario", response_model=LerUsuario)
+async def atualizar(
+    usuario_atualizado: AtualizarUsuario,
+    session: AsyncSession = Depends(get_db),
+    id: UUID4 | None = None,
+    email: str | None = None,
+):
+    filtros = Filtros(
+        {
+            "id": id,
+            "email": email,
+        }
+    )
 
-        if not usuario:
-            raise UsuarioNaoEncontrado
+    usuario = await UsuarioRepoConsulta(session=session).consultar_um_por_filtros(
+        filtros=filtros
+    )
 
-        usuario_deletado = await UsuarioControllers.deletar_por_id(
-            session=session, id=usuario.id
-        )
-        return usuario_deletado
+    if not usuario:
+        raise UsuarioNaoEncontrado
+
+    usuario_atualizado._id = usuario.id
+    usuario = await atualizar_usuario(session=session, usuario_att=usuario_atualizado)
+    return usuario
+
+
+@router.delete("/usuario")
+async def remover(
+    session: AsyncSession = Depends(get_db),
+    id: UUID4 | None = None,
+    email: str | None = None,
+):
+    filtros = Filtros(
+        {
+            "id": id,
+            "email": email,
+        }
+    )
+
+    usuario = await UsuarioRepoConsulta(session=session).consultar_um_por_filtros(
+        filtros=filtros
+    )
+
+    if not usuario:
+        raise UsuarioNaoEncontrado
+
+    usuario_deletado = await remover_usuario(session=session, id=usuario.id)
+    return usuario_deletado

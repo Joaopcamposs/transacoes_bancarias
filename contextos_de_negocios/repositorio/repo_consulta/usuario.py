@@ -1,25 +1,53 @@
 from typing import Sequence
 
-from sqlalchemy import Uuid, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
+from contextos_de_negocios.dominio.entidades.usuario import UsuarioEntidade
 from contextos_de_negocios.repositorio.orm.usuario import Usuario
+from libs.ddd.adaptadores.repositorio import RepositorioConsulta
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class UsuarioRepoConsulta:
-    @staticmethod
-    async def consultar_todos(session: AsyncSession) -> Sequence[Usuario]:
-        usuarios = (await session.execute(select(Usuario))).scalars().all()
-        return usuarios
+class UsuarioRepoConsulta(RepositorioConsulta):
+    async def consultar_por_filtros(
+        self, filtros: Filtros
+    ) -> Sequence[UsuarioEntidade]:
+        usuarios = (
+            (await self.session.execute(select(Usuario).filter_by(**filtros)))
+            .scalars()
+            .all()
+        )
 
-    @staticmethod
-    async def consultar_por_id(session: AsyncSession, id: Uuid) -> Usuario | None:
-        usuario = await session.get(Usuario, id)
-        return usuario
+        usuarios_entidade = [
+            UsuarioEntidade(
+                id=usuario.id,
+                nome=usuario.nome,
+                email=usuario.email,
+                adm=usuario.adm,
+                ativo=usuario.ativo,
+                _senha=usuario.senha,
+            )
+            for usuario in usuarios
+        ]
 
-    @staticmethod
-    async def consultar_por_email(session: AsyncSession, email: str) -> Usuario | None:
+        return usuarios_entidade
+
+    async def consultar_um_por_filtros(
+        self, filtros: Filtros
+    ) -> UsuarioEntidade | None:
         usuario = (
-            await session.execute(select(Usuario).filter_by(email=email.lower()))
+            await self.session.execute(select(Usuario).filter_by(**filtros))
         ).scalar_one_or_none()
-        return usuario
+        if not usuario:
+            return None
+
+        usuario_entidade = UsuarioEntidade(
+            id=usuario.id,
+            nome=usuario.nome,
+            email=usuario.email,
+            adm=usuario.adm,
+            ativo=usuario.ativo,
+            _senha=usuario.senha,
+        )
+
+        return usuario_entidade

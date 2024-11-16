@@ -15,15 +15,16 @@ from contextos_de_negocios.dominio.entidades.cliente import (
     AtualizarCliente,
 )
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao, CPF
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 async def cadastrar_cliente(
     session: AsyncSession,
     cliente: CadastrarCliente,
 ) -> ClienteAgregado:
-    cliente_com_mesmo_cpf = await ClienteRepoConsulta.consultar_por_cpf(
-        session=session, cpf=cliente.cpf
-    )
+    cliente_com_mesmo_cpf = await ClienteRepoConsulta(
+        session=session
+    ).consultar_um_por_filtros(Filtros({"cpf": cliente.cpf}))
 
     if cliente_com_mesmo_cpf:
         raise ClienteJaCadastrado

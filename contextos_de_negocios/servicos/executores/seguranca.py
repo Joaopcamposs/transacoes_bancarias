@@ -2,9 +2,7 @@ from datetime import timedelta, datetime
 
 import jwt
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
-from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
@@ -13,38 +11,26 @@ from contextos_de_negocios.dominio.exceptions import (
     NaoFoiPossivelValidarAsCredenciais,
 )
 from contextos_de_negocios.repositorio.orm.usuario import Usuario
-from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM
+from contextos_de_negocios.repositorio.repo_dominio.usuario import UsuarioRepoDominio
+from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM, oauth2_scheme
 from infra.database import get_db
 from contextos_de_negocios.dominio.entidades.seguranca import TokenData
 from contextos_de_negocios.repositorio.repo_consulta.usuario import UsuarioRepoConsulta
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class Servicos:
-    @staticmethod
-    def verificar_senha(senha: str, senha_criptografada: str) -> bool:
-        senhas_conferem = pwd_context.verify(secret=senha, hash=senha_criptografada)
-        return senhas_conferem
-
-    @staticmethod
-    def criptografar_senha(senha: str) -> str:
-        senha_criptografada = pwd_context.hash(secret=senha)
-        return senha_criptografada
-
+class Seguranca:
     @staticmethod
     async def autenticar_usuario(
         session: AsyncSession, email: str, senha: str
     ) -> Usuario | None:
-        usuario = await UsuarioRepoConsulta.consultar_por_email(
-            session=session, email=email
+        usuario = await UsuarioRepoDominio(session=session).consultar_por_email(
+            email=email
         )
 
         if not usuario:
             return None
-        if not Servicos.verificar_senha(senha=senha, senha_criptografada=usuario.senha):
+        if not usuario.verificar_senha(senha=senha):
             return None
 
         return usuario
@@ -79,8 +65,8 @@ class Servicos:
             raise NaoFoiPossivelValidarAsCredenciais(
                 headers={"WWW-Authenticate": "Bearer"}
             )
-        usuario = await UsuarioRepoConsulta.consultar_por_email(
-            session=session, email=dados_token.email
+        usuario = await UsuarioRepoConsulta(session=session).consultar_um_por_filtros(
+            Filtros({"email": dados_token.email})
         )
         if usuario is None:
             raise NaoFoiPossivelValidarAsCredenciais(
@@ -93,7 +79,7 @@ class Servicos:
         token: Annotated[str, Depends(oauth2_scheme)],
         session: AsyncSession = Depends(get_db),
     ):
-        usuario = await Servicos.obter_usuario_atual(
+        usuario = await Seguranca.obter_usuario_atual(
             token=token,
             session=session,
         )
@@ -102,5 +88,5 @@ class Servicos:
         return usuario
 
 
-UsuarioAtual = Annotated[Usuario, Depends(Servicos.obter_usuario_atual)]
-UsuarioAtualADM = Annotated[Usuario, Depends(Servicos.obter_usuario_atual_adm)]
+UsuarioAtual = Annotated[Usuario, Depends(Seguranca.obter_usuario_atual)]
+UsuarioAtualADM = Annotated[Usuario, Depends(Seguranca.obter_usuario_atual_adm)]

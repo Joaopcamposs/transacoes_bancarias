@@ -22,6 +22,7 @@ from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     AtualizarContaBancaria,
 )
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 class ContaBancariaControllers:
@@ -39,8 +40,8 @@ class ContaBancariaControllers:
             raise ContaBancariaJaCadastrado
 
         # Verifica se o CPF existe
-        cliente = await ClienteRepoConsulta.consultar_por_cpf(
-            session=session, cpf=conta_bancaria.cpf_cliente
+        cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
+            Filtros({"cpf": conta_bancaria.cpf_cliente})
         )
         if not cliente:
             raise ClienteNaoEncontrado

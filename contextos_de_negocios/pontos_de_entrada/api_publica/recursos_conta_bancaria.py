@@ -15,7 +15,7 @@ from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     LerContaBancaria,
     LerContaBancariaETransacoes,
 )
-from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     LerTransacaoBancaria,
 )
@@ -24,7 +24,7 @@ from infra.database import get_db
 router = APIRouter(
     prefix="/api",
     tags=["Conta Bancaria"],
-    dependencies=[Depends(Servicos.obter_usuario_atual)],
+    dependencies=[Depends(Seguranca.obter_usuario_atual)],
 )
 
 

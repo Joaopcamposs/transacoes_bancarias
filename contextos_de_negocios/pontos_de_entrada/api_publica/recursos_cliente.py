@@ -16,14 +16,14 @@ from contextos_de_negocios.servicos.executores.cliente import (
     atualizar_cliente,
     remover_cliente,
 )
-from contextos_de_negocios.servicos.executores.seguranca import Servicos
+from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from infra.database import get_db
 from libs.ddd.adaptadores.visualizadores import Filtros
 
 router = APIRouter(
     prefix="/api",
     tags=["Clientes"],
-    dependencies=[Depends(Servicos.obter_usuario_atual)],
+    dependencies=[Depends(Seguranca.obter_usuario_atual)],
 )
 
 
@@ -40,8 +40,8 @@ async def listar(
         }
     )
 
-    clientes = await ClienteRepoConsulta.consultar_por_filtros(
-        session=session, filtros=filtros
+    clientes = await ClienteRepoConsulta(session=session).consultar_por_filtros(
+        filtros=filtros
     )
 
     if not clientes:
@@ -73,8 +73,8 @@ async def atualizar(
         }
     )
 
-    cliente = await ClienteRepoConsulta.consultar_um_por_filtros(
-        session=session, filtros=filtros
+    cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
+        filtros=filtros
     )
 
     if not cliente:
@@ -98,8 +98,8 @@ async def remover(
         }
     )
 
-    cliente = await ClienteRepoConsulta.consultar_um_por_filtros(
-        session=session, filtros=filtros
+    cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
+        filtros=filtros
     )
 
     if not cliente:

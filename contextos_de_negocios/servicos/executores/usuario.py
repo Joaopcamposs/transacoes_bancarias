@@ -1,96 +1,84 @@
 from sqlalchemy import Uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import status, HTTPException
 
+from contextos_de_negocios.dominio.agregados.usuario import Usuario as UsuarioAgregado
 from contextos_de_negocios.dominio.exceptions import (
     UsuarioNaoEncontrado,
     UsuarioJaCadastrado,
 )
-from contextos_de_negocios.repositorio.orm.usuario import Usuario
 from contextos_de_negocios.repositorio.repo_consulta.usuario import (
     UsuarioRepoConsulta,
 )
 from contextos_de_negocios.repositorio.repo_dominio.usuario import UsuarioRepoDominio
-from contextos_de_negocios.dominio.entidades.usuario import CadastrarEAtualizarUsuario
+from contextos_de_negocios.dominio.entidades.usuario import (
+    CadastrarUsuario,
+    AtualizarUsuario,
+)
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class UsuarioControllers:
-    @staticmethod
-    async def cadastrar(
-        session: AsyncSession,
-        usuario: CadastrarEAtualizarUsuario,
-        criptografar_senha: bool = True,
-    ) -> Usuario:
-        from contextos_de_negocios.servicos.executores.seguranca import Servicos
+async def cadastrar_usuario(
+    session: AsyncSession,
+    usuario: CadastrarUsuario,
+    criptografar_senha: bool = True,
+) -> UsuarioAgregado:
+    usuario_com_mesmo_email = await UsuarioRepoConsulta(
+        session=session
+    ).consultar_um_por_filtros(Filtros({"email": usuario.email}))
 
-        usuario_no_banco = await UsuarioRepoConsulta.consultar_por_email(
-            session=session, email=usuario.email
-        )
+    if usuario_com_mesmo_email:
+        raise UsuarioJaCadastrado
 
-        if usuario_no_banco:
-            raise UsuarioJaCadastrado
+    novo_usuario = UsuarioAgregado.retornar_agregado_para_cadastro(
+        nome=usuario.nome,
+        email=usuario.email,
+        senha=usuario.senha,
+        adm=usuario.adm,
+        ativo=usuario.ativo,
+        criptografar_senha=criptografar_senha,
+    )
 
-        novo_usuario = Usuario(**usuario.dict())
-        novo_usuario.email = novo_usuario.email.lower()
-        if criptografar_senha:
-            novo_usuario.senha = Servicos.criptografar_senha(novo_usuario.senha)
+    id_resultado = await UsuarioRepoDominio(session=session).adicionar(
+        usuario=novo_usuario,
+        tipo_operacao=TipoOperacao.INSERCAO,
+    )
+    novo_usuario.id = id_resultado
 
-        try:
-            novo_usuario = await UsuarioRepoDominio.adicionar(
-                session=session,
-                usuario=novo_usuario,
-                tipo_operacao=TipoOperacao.INSERCAO,
-            )
-        except Exception as erro:
-            raise HTTPException(
-                detail=f"Erro ao cadastrar usuário: {erro}",
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-        return novo_usuario
+    return novo_usuario
 
-    @staticmethod
-    async def atualizar_por_id(
-        session: AsyncSession, id: Uuid, usuario_att: CadastrarEAtualizarUsuario
-    ) -> Usuario:
-        from contextos_de_negocios.servicos.executores.seguranca import Servicos
 
-        usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
+async def atualizar_usuario(
+    session: AsyncSession, usuario_att: AtualizarUsuario
+) -> UsuarioAgregado:
+    usuario = await UsuarioRepoDominio(session=session).consultar_por_id(
+        id=usuario_att._id
+    )
 
-        if not usuario:
-            raise UsuarioNaoEncontrado
+    if not usuario:
+        raise UsuarioNaoEncontrado
 
-        usuario_att.email = usuario_att.email.lower()
-        usuario_att.senha = Servicos.criptografar_senha(usuario_att.senha)
+    usuario.atualizar(
+        nome=usuario_att.nome,
+        email=usuario_att.email,
+        senha=usuario_att.senha,
+        adm=usuario_att.adm,
+        ativo=usuario_att.ativo,
+    )
 
-        # Atualiza os dados do acessório
-        for atributo, valor in usuario_att.dict().items():
-            setattr(usuario, atributo, valor)
+    await UsuarioRepoDominio(session=session).adicionar(
+        usuario=usuario, tipo_operacao=TipoOperacao.ATUALIZACAO
+    )
 
-        try:
-            usuario = await UsuarioRepoDominio.adicionar(
-                session=session, usuario=usuario, tipo_operacao=TipoOperacao.ATUALIZACAO
-            )
-        except Exception as erro:
-            raise HTTPException(
-                detail=f"Erro ao atualizar usuario: {erro}",
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
-        return usuario
+    return usuario
 
-    @staticmethod
-    async def deletar_por_id(session: AsyncSession, id: Uuid) -> str:
-        usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
 
-        if not usuario:
-            raise UsuarioNaoEncontrado
+async def remover_usuario(session: AsyncSession, id: Uuid) -> str:
+    usuario = await UsuarioRepoDominio(session=session).consultar_por_id(id=id)
 
-        try:
-            await UsuarioRepoDominio.remover(session=session, usuario=usuario)
-        except Exception as erro:
-            raise HTTPException(
-                detail=f"Erro ao deletar usuário: {erro}",
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
+    if not usuario:
+        raise UsuarioNaoEncontrado
 
-        return "Usuário deletado!"
+    await UsuarioRepoDominio(session=session).remover(usuario=usuario)
+
+    return "Usuário deletado!"
