@@ -1,11 +1,12 @@
+from dataclasses import dataclass
 from decimal import Decimal
 
 from pydantic import BaseModel, UUID4, field_validator
 
-from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     LerTransacaoBancaria,
 )
+from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
 
 
 class CadastrarContaBancaria(BaseModel):
@@ -22,6 +23,11 @@ class AtualizarContaBancaria(BaseModel):
     numero_da_conta: str
     cpf_cliente: str
 
+    _numero_da_conta_antigo: UUID4 | None = None
+
+    class Config:
+        underscore_attrs_are_private = True  # Torna os atributos com "_" privados
+
 
 class LerContaBancaria(BaseModel):
     id: UUID4
@@ -34,7 +40,7 @@ class LerContaBancaria(BaseModel):
         return Decimal(v).quantize(Decimal("0.00"))
 
     @staticmethod
-    def from_conta(conta: ContaBancaria):
+    def from_conta(conta: "ContaEntidade"):
         return LerContaBancaria(
             id=conta.id,
             numero_da_conta=conta.numero_da_conta,
@@ -46,3 +52,12 @@ class LerContaBancaria(BaseModel):
 class LerContaBancariaETransacoes(BaseModel):
     contas: list[LerContaBancaria]
     transacoes: list[LerTransacaoBancaria]
+
+
+@dataclass(frozen=True)
+class ContaEntidade:
+    id: UUID4
+    numero_da_conta: str
+    saldo: Decimal
+    cpf_cliente: str
+    transacoes: list[TransacaoBancaria] | None = None

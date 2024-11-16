@@ -6,16 +6,15 @@ import pytest
 import pytest_asyncio
 from pydantic import UUID4
 
+from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
 from contextos_de_negocios.repositorio.orm.cliente import Cliente
 from contextos_de_negocios.dominio.entidades.cliente import CadastrarCliente
 from contextos_de_negocios.servicos.executores.cliente import cadastrar_cliente
-from contextos_de_negocios.servicos.executores.conta_bancaria import (
-    ContaBancariaControllers,
-)
-from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
+
 from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     CadastrarContaBancaria,
 )
+from contextos_de_negocios.servicos.executores.conta_bancaria import cadastrar_conta
 from contextos_de_negocios.servicos.executores.seguranca import Seguranca
 from contextos_de_negocios.utils.tipos_basicos import CPF
 from libs.ddd.adaptadores.visualizadores import Filtros
@@ -112,14 +111,14 @@ def mock_conta_bancaria_gen() -> dict:
 async def mock_conta_bancaria(mock_cliente, session_factory):
     async def _create_mock_conta(
         numero_da_conta: str | None = None, saldo: Decimal | None = None
-    ) -> ContaBancaria:
+    ) -> Conta:
         dados_para_cadastrar = CadastrarContaBancaria(
             numero_da_conta=numero_da_conta or str(randint(100000, 999999)),
             saldo=saldo or Decimal(0.0),
             cpf_cliente=mock_cliente.cpf,
         )
         async with session_factory() as session:
-            conta = await ContaBancariaControllers.cadastrar(
+            conta = await cadastrar_conta(
                 session=session, conta_bancaria=dados_para_cadastrar
             )
         return conta

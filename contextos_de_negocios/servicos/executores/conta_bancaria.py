@@ -5,12 +5,9 @@ from contextos_de_negocios.dominio.exceptions import (
     ClienteNaoEncontrado,
     ContaBancariaNaoEncontrado,
     ContaBancariaJaCadastrado,
-    ErroAoAtualizarContaBancaria,
-    ErroAoDeletarContaBancaria,
 )
 from contextos_de_negocios.repositorio.repo_consulta.cliente import ClienteRepoConsulta
 from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
-from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.repositorio.repo_consulta.conta_bancaria import (
     ContaBancariaRepoConsulta,
 )
@@ -25,85 +22,72 @@ from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class ContaBancariaControllers:
-    @staticmethod
-    async def cadastrar(
-        session: AsyncSession,
-        conta_bancaria: CadastrarContaBancaria,
-    ) -> ContaBancaria:
-        conta_bancaria_no_banco = (
-            await ContaBancariaRepoConsulta.consultar_por_numero_da_conta(
-                session=session, numero_da_conta=conta_bancaria.numero_da_conta
-            )
-        )
-        if conta_bancaria_no_banco:
-            raise ContaBancariaJaCadastrado
+async def cadastrar_conta(
+    session: AsyncSession,
+    conta_bancaria: CadastrarContaBancaria,
+) -> Conta:
+    conta_bancaria_com_mesmo_numero = await ContaBancariaRepoConsulta(
+        session=session
+    ).consultar_um_por_filtros(
+        Filtros({"numero_da_conta": conta_bancaria.numero_da_conta})
+    )
+    if conta_bancaria_com_mesmo_numero:
+        raise ContaBancariaJaCadastrado
 
-        # Verifica se o CPF existe
-        cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
-            Filtros({"cpf": conta_bancaria.cpf_cliente})
-        )
-        if not cliente:
-            raise ClienteNaoEncontrado
+    # Verifica se o CPF existe
+    cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
+        Filtros({"cpf": conta_bancaria.cpf_cliente})
+    )
+    if not cliente:
+        raise ClienteNaoEncontrado
 
-        novo_conta_bancaria = Conta(
-            numero_da_conta=conta_bancaria.numero_da_conta,
-            saldo=conta_bancaria.saldo,
-            cpf_cliente=conta_bancaria.cpf_cliente,
-        ).nova_conta()
+    nova_conta_bancaria = Conta.retornar_agregado_para_cadastro(
+        numero_da_conta=conta_bancaria.numero_da_conta,
+        saldo=conta_bancaria.saldo,
+        cpf_cliente=conta_bancaria.cpf_cliente,
+    )
 
-        novo_conta_bancaria = await ContaBancariaRepoDominio.adicionar(
-            session=session,
-            conta_bancaria=novo_conta_bancaria,
-            tipo_operacao=TipoOperacao.INSERCAO,
-        )
+    id_resultado = await ContaBancariaRepoDominio(session=session).adicionar(
+        conta=nova_conta_bancaria,
+        tipo_operacao=TipoOperacao.INSERCAO,
+    )
+    nova_conta_bancaria.id = id_resultado
 
-        return novo_conta_bancaria
+    return nova_conta_bancaria
 
-    @staticmethod
-    async def atualizar_por_id(
-        session: AsyncSession,
-        id: Uuid,
-        conta_bancaria_att: AtualizarContaBancaria,
-    ) -> ContaBancaria:
-        conta_bancaria = await ContaBancariaRepoConsulta.consultar_por_id(
-            session=session, id=id
-        )
 
-        if not conta_bancaria:
-            raise ContaBancariaNaoEncontrado
+async def atualizar_conta(
+    session: AsyncSession,
+    conta_bancaria_att: AtualizarContaBancaria,
+) -> Conta:
+    conta = await ContaBancariaRepoDominio(
+        session=session
+    ).consultar_por_numero_da_conta(
+        numero_da_conta=conta_bancaria_att._numero_da_conta_antigo
+    )
 
-        for atributo, valor in conta_bancaria_att.dict().items():
-            setattr(conta_bancaria, atributo, valor)
+    if not conta:
+        raise ContaBancariaNaoEncontrado
 
-        try:
-            conta_bancaria = await ContaBancariaRepoDominio.adicionar(
-                session=session,
-                conta_bancaria=conta_bancaria,
-                tipo_operacao=TipoOperacao.ATUALIZACAO,
-            )
-        except Exception as erro:
-            raise ErroAoAtualizarContaBancaria(
-                detail=f"Erro ao atualizar conta_bancaria: {erro}",
-            )
-        return conta_bancaria
+    conta.atualizar(
+        numero_da_conta=conta_bancaria_att.numero_da_conta,
+        cpf_cliente=conta_bancaria_att.cpf_cliente,
+    )
 
-    @staticmethod
-    async def deletar_por_id(session: AsyncSession, id: Uuid) -> str:
-        conta_bancaria = await ContaBancariaRepoConsulta.consultar_por_id(
-            session=session, id=id
-        )
+    await ContaBancariaRepoDominio(session=session).adicionar(
+        conta=conta,
+        tipo_operacao=TipoOperacao.ATUALIZACAO,
+    )
 
-        if not conta_bancaria:
-            raise ContaBancariaNaoEncontrado
+    return conta
 
-        try:
-            await ContaBancariaRepoDominio.remover(
-                session=session, conta_bancaria=conta_bancaria
-            )
-        except Exception as erro:
-            raise ErroAoDeletarContaBancaria(
-                detail=f"Erro ao deletar conta bancaria: {erro}",
-            )
 
-        return "ContaBancaria deletado!"
+async def remover_conta(session: AsyncSession, id: Uuid) -> str:
+    conta = await ContaBancariaRepoDominio(session=session).consultar_por_id(id=id)
+
+    if not conta:
+        raise ContaBancariaNaoEncontrado
+
+    await ContaBancariaRepoDominio(session=session).remover(conta=conta)
+
+    return "Conta Bancaria deletada!"

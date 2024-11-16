@@ -1,55 +1,63 @@
 from typing import Sequence
 
-from sqlalchemy import Uuid, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from contextos_de_negocios.dominio.entidades.conta_bancaria import ContaEntidade
 from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
+from libs.ddd.adaptadores.repositorio import RepositorioConsulta
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class ContaBancariaRepoConsulta:
-    @staticmethod
-    async def consultar_todos(session: AsyncSession) -> Sequence[ContaBancaria]:
-        conta_bancarias = (
+class ContaBancariaRepoConsulta(RepositorioConsulta):
+    async def consultar_por_filtros(self, filtros: Filtros) -> Sequence[ContaEntidade]:
+        contas = (
             (
-                await session.execute(
-                    select(ContaBancaria).options(joinedload(ContaBancaria.transacoes))
+                await self.session.execute(
+                    select(ContaBancaria)
+                    .options(joinedload(ContaBancaria.transacoes))
+                    .filter_by(**filtros)
                 )
             )
-            .scalars()
             .unique()
+            .scalars()
             .all()
         )
-        return conta_bancarias
 
-    @staticmethod
-    async def consultar_por_id(session: AsyncSession, id: Uuid) -> ContaBancaria | None:
-        conta_bancaria = (
+        contas_entidade = [
+            ContaEntidade(
+                id=conta.id,
+                numero_da_conta=conta.numero_da_conta,
+                saldo=conta.saldo,
+                cpf_cliente=conta.cpf_cliente,
+                transacoes=conta.transacoes,
+            )
+            for conta in contas
+        ]
+
+        return contas_entidade
+
+    async def consultar_um_por_filtros(self, filtros: Filtros) -> ContaEntidade | None:
+        conta = (
             (
-                await session.execute(
+                await self.session.execute(
                     select(ContaBancaria)
                     .options(joinedload(ContaBancaria.transacoes))
-                    .filter_by(id=id)
+                    .filter_by(**filtros)
                 )
             )
             .unique()
             .scalar_one_or_none()
         )
-        return conta_bancaria
+        if not conta:
+            return None
 
-    @staticmethod
-    async def consultar_por_numero_da_conta(
-        session: AsyncSession, numero_da_conta: str
-    ) -> ContaBancaria | None:
-        conta_bancaria = (
-            (
-                await session.execute(
-                    select(ContaBancaria)
-                    .options(joinedload(ContaBancaria.transacoes))
-                    .filter_by(numero_da_conta=numero_da_conta)
-                )
-            )
-            .unique()
-            .scalar_one_or_none()
+        conta_entidade = ContaEntidade(
+            id=conta.id,
+            numero_da_conta=conta.numero_da_conta,
+            saldo=conta.saldo,
+            cpf_cliente=conta.cpf_cliente,
+            transacoes=conta.transacoes,
         )
-        return conta_bancaria
+
+        return conta_entidade

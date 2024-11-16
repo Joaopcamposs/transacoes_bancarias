@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from _decimal import Decimal
 
 from contextos_de_negocios.dominio.exceptions import (
     SaldoInsuficienteParaRealizarTransacao,
 )
-from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
 from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
     TipoTransacao,
@@ -22,7 +21,16 @@ class Conta:
     numero_da_conta: NumeroDaConta | str
     saldo: Decimal
     cpf_cliente: CPF | str
-    id: UUID = uuid4()
+    id: UUID | None = None
+    transacoes: list[TransacaoBancaria] | None = None
+
+    @classmethod
+    def retornar_agregado_para_cadastro(
+        cls, numero_da_conta: NumeroDaConta, saldo: Decimal, cpf_cliente: CPF
+    ) -> "Conta":
+        return Conta(
+            numero_da_conta=numero_da_conta, saldo=saldo, cpf_cliente=cpf_cliente
+        )
 
     @staticmethod
     def _validar_valor_da_operacao(valor: Decimal) -> None:
@@ -81,17 +89,10 @@ class Conta:
             numero_da_conta_destino=numero_da_conta_destino,
         )
 
-    def nova_conta(self) -> ContaBancaria:
-        return ContaBancaria(
-            numero_da_conta=NumeroDaConta(self.numero_da_conta),
-            saldo=Decimal(self.saldo),
-            cpf_cliente=CPF.somente_digitos(str(self.cpf_cliente)),
-        )
+    def cadastrar(self) -> None: ...
 
-    def atualizar_conta(self) -> ContaBancaria:
-        return ContaBancaria(
-            id=self.id,
-            numero_da_conta=self.numero_da_conta,
-            cpf_cliente=self.cpf_cliente,
-            saldo=self.saldo,
-        )
+    def atualizar(self, numero_da_conta: NumeroDaConta, cpf_cliente: CPF) -> None:
+        self.numero_da_conta = numero_da_conta
+        self.cpf_cliente = cpf_cliente
+
+    def remover(self) -> None: ...
