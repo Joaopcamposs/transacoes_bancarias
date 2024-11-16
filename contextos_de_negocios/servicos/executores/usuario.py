@@ -8,9 +8,9 @@ from contextos_de_negocios.dominio.exceptions import (
 )
 from contextos_de_negocios.repositorio.orm.usuario import Usuario
 from contextos_de_negocios.repositorio.repo_consulta.usuario import (
-    RepoUsuarioLeitura,
+    UsuarioRepoConsulta,
 )
-from contextos_de_negocios.repositorio.repo_dominio.usuario import RepoUsuarioEscrita
+from contextos_de_negocios.repositorio.repo_dominio.usuario import UsuarioRepoDominio
 from contextos_de_negocios.dominio.entidades.usuario import CadastrarEAtualizarUsuario
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 
@@ -24,7 +24,7 @@ class UsuarioControllers:
     ) -> Usuario:
         from contextos_de_negocios.servicos.executores.seguranca import Servicos
 
-        usuario_no_banco = await RepoUsuarioLeitura.consultar_por_email(
+        usuario_no_banco = await UsuarioRepoConsulta.consultar_por_email(
             session=session, email=usuario.email
         )
 
@@ -37,7 +37,7 @@ class UsuarioControllers:
             novo_usuario.senha = Servicos.criptografar_senha(novo_usuario.senha)
 
         try:
-            novo_usuario = await RepoUsuarioEscrita.adicionar(
+            novo_usuario = await UsuarioRepoDominio.adicionar(
                 session=session,
                 usuario=novo_usuario,
                 tipo_operacao=TipoOperacao.INSERCAO,
@@ -55,7 +55,7 @@ class UsuarioControllers:
     ) -> Usuario:
         from contextos_de_negocios.servicos.executores.seguranca import Servicos
 
-        usuario = await RepoUsuarioLeitura.consultar_por_id(session=session, id=id)
+        usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
 
         if not usuario:
             raise UsuarioNaoEncontrado
@@ -68,7 +68,7 @@ class UsuarioControllers:
             setattr(usuario, atributo, valor)
 
         try:
-            usuario = await RepoUsuarioEscrita.adicionar(
+            usuario = await UsuarioRepoDominio.adicionar(
                 session=session, usuario=usuario, tipo_operacao=TipoOperacao.ATUALIZACAO
             )
         except Exception as erro:
@@ -80,13 +80,13 @@ class UsuarioControllers:
 
     @staticmethod
     async def deletar_por_id(session: AsyncSession, id: Uuid) -> str:
-        usuario = await RepoUsuarioLeitura.consultar_por_id(session=session, id=id)
+        usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
 
         if not usuario:
             raise UsuarioNaoEncontrado
 
         try:
-            await RepoUsuarioEscrita.remover(session=session, usuario=usuario)
+            await UsuarioRepoDominio.remover(session=session, usuario=usuario)
         except Exception as erro:
             raise HTTPException(
                 detail=f"Erro ao deletar usuário: {erro}",

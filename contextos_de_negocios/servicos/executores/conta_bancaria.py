@@ -8,14 +8,14 @@ from contextos_de_negocios.dominio.exceptions import (
     ErroAoAtualizarContaBancaria,
     ErroAoDeletarContaBancaria,
 )
-from contextos_de_negocios.repositorio.repo_consulta.cliente import RepoClienteLeitura
+from contextos_de_negocios.repositorio.repo_consulta.cliente import ClienteRepoConsulta
 from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
 from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.repositorio.repo_consulta.conta_bancaria import (
-    RepoContaBancariaLeitura,
+    ContaBancariaRepoConsulta,
 )
 from contextos_de_negocios.repositorio.repo_dominio.conta_bancaria import (
-    RepoContaBancariaEscrita,
+    ContaBancariaRepoDominio,
 )
 from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     CadastrarContaBancaria,
@@ -31,7 +31,7 @@ class ContaBancariaControllers:
         conta_bancaria: CadastrarContaBancaria,
     ) -> ContaBancaria:
         conta_bancaria_no_banco = (
-            await RepoContaBancariaLeitura.consultar_por_numero_da_conta(
+            await ContaBancariaRepoConsulta.consultar_por_numero_da_conta(
                 session=session, numero_da_conta=conta_bancaria.numero_da_conta
             )
         )
@@ -39,7 +39,7 @@ class ContaBancariaControllers:
             raise ContaBancariaJaCadastrado
 
         # Verifica se o CPF existe
-        cliente = await RepoClienteLeitura.consultar_por_cpf(
+        cliente = await ClienteRepoConsulta.consultar_por_cpf(
             session=session, cpf=conta_bancaria.cpf_cliente
         )
         if not cliente:
@@ -51,7 +51,7 @@ class ContaBancariaControllers:
             cpf_cliente=conta_bancaria.cpf_cliente,
         ).nova_conta()
 
-        novo_conta_bancaria = await RepoContaBancariaEscrita.adicionar(
+        novo_conta_bancaria = await ContaBancariaRepoDominio.adicionar(
             session=session,
             conta_bancaria=novo_conta_bancaria,
             tipo_operacao=TipoOperacao.INSERCAO,
@@ -65,7 +65,7 @@ class ContaBancariaControllers:
         id: Uuid,
         conta_bancaria_att: AtualizarContaBancaria,
     ) -> ContaBancaria:
-        conta_bancaria = await RepoContaBancariaLeitura.consultar_por_id(
+        conta_bancaria = await ContaBancariaRepoConsulta.consultar_por_id(
             session=session, id=id
         )
 
@@ -76,7 +76,7 @@ class ContaBancariaControllers:
             setattr(conta_bancaria, atributo, valor)
 
         try:
-            conta_bancaria = await RepoContaBancariaEscrita.adicionar(
+            conta_bancaria = await ContaBancariaRepoDominio.adicionar(
                 session=session,
                 conta_bancaria=conta_bancaria,
                 tipo_operacao=TipoOperacao.ATUALIZACAO,
@@ -89,7 +89,7 @@ class ContaBancariaControllers:
 
     @staticmethod
     async def deletar_por_id(session: AsyncSession, id: Uuid) -> str:
-        conta_bancaria = await RepoContaBancariaLeitura.consultar_por_id(
+        conta_bancaria = await ContaBancariaRepoConsulta.consultar_por_id(
             session=session, id=id
         )
 
@@ -97,7 +97,7 @@ class ContaBancariaControllers:
             raise ContaBancariaNaoEncontrado
 
         try:
-            await RepoContaBancariaEscrita.remover(
+            await ContaBancariaRepoDominio.remover(
                 session=session, conta_bancaria=conta_bancaria
             )
         except Exception as erro:

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contextos_de_negocios.servicos.executores.seguranca import Servicos
 from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
 from contextos_de_negocios.dominio.exceptions import UsuarioNaoEncontrado
-from contextos_de_negocios.repositorio.repo_consulta.usuario import RepoUsuarioLeitura
+from contextos_de_negocios.repositorio.repo_consulta.usuario import UsuarioRepoConsulta
 from contextos_de_negocios.dominio.entidades.usuario import (
     CadastrarEAtualizarUsuario,
     LerUsuario,
@@ -29,16 +29,16 @@ class UsuarioRoutes:
     ):
         if id:
             usuarios = [
-                await RepoUsuarioLeitura.consultar_por_id(session=session, id=id)
+                await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
             ]
         elif email:
             usuarios = [
-                await RepoUsuarioLeitura.consultar_por_email(
+                await UsuarioRepoConsulta.consultar_por_email(
                     session=session, email=email
                 )
             ]
         else:
-            usuarios = await RepoUsuarioLeitura.consultar_todos(session=session)
+            usuarios = await UsuarioRepoConsulta.consultar_todos(session=session)
 
         if not usuarios or usuarios == [None]:
             raise UsuarioNaoEncontrado
@@ -65,9 +65,9 @@ class UsuarioRoutes:
         email: str | None = None,
     ):
         if id:
-            usuario = await RepoUsuarioLeitura.consultar_por_id(session=session, id=id)
+            usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
         else:
-            usuario = await RepoUsuarioLeitura.consultar_por_email(
+            usuario = await UsuarioRepoConsulta.consultar_por_email(
                 session=session, email=email
             )
 
@@ -87,9 +87,9 @@ class UsuarioRoutes:
         email: str | None = None,
     ):
         if id:
-            usuario = await RepoUsuarioLeitura.consultar_por_id(session=session, id=id)
+            usuario = await UsuarioRepoConsulta.consultar_por_id(session=session, id=id)
         else:
-            usuario = await RepoUsuarioLeitura.consultar_por_email(
+            usuario = await UsuarioRepoConsulta.consultar_por_email(
                 session=session, email=email
             )
 

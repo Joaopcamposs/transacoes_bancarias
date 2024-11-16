@@ -6,9 +6,9 @@ import pytest
 import pytest_asyncio
 from pydantic import UUID4
 
-from contextos_de_negocios.servicos.executores.cliente import ClienteControllers
 from contextos_de_negocios.repositorio.orm.cliente import Cliente
-from contextos_de_negocios.dominio.entidades.cliente import CadastrarEAtualizarCliente
+from contextos_de_negocios.dominio.entidades.cliente import CadastrarCliente
+from contextos_de_negocios.servicos.executores.cliente import cadastrar_cliente
 from contextos_de_negocios.servicos.executores.conta_bancaria import (
     ContaBancariaControllers,
 )
@@ -48,7 +48,7 @@ async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
         CadastrarEAtualizarUsuario,
     )
     from contextos_de_negocios.repositorio.repo_consulta.usuario import (
-        RepoUsuarioLeitura,
+        UsuarioRepoConsulta,
     )
     from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
 
@@ -62,14 +62,14 @@ async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
         )
 
         usuario_cadastrado = None
-        if len(list(await RepoUsuarioLeitura.consultar_todos(session))) == 0:
+        if len(list(await UsuarioRepoConsulta.consultar_todos(session))) == 0:
             usuario_cadastrado = await UsuarioControllers.cadastrar(
                 session, novo_usuario
             )
             print(usuario_cadastrado)
 
         if not usuario_cadastrado:
-            usuario_cadastrado = await RepoUsuarioLeitura.consultar_por_email(
+            usuario_cadastrado = await UsuarioRepoConsulta.consultar_por_email(
                 session, novo_usuario.email
             )
 
@@ -83,16 +83,14 @@ async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
 
 @pytest.fixture(scope="function")
 def mock_cliente_gen() -> dict:
-    return {"nome": "Cliente Teste", "cpf": CPF().gerar()}
+    return {"nome": "Cliente Teste", "cpf": CPF.gerar()}
 
 
 @pytest_asyncio.fixture(scope="function")
 async def mock_cliente(mock_cliente_gen, session_factory) -> Cliente:
-    dados_para_cadastrar = CadastrarEAtualizarCliente(**mock_cliente_gen)
+    dados_para_cadastrar = CadastrarCliente(**mock_cliente_gen)
     async with session_factory() as session:
-        cliente = await ClienteControllers.cadastrar(
-            session=session, cliente=dados_para_cadastrar
-        )
+        cliente = await cadastrar_cliente(session=session, cliente=dados_para_cadastrar)
 
     return cliente
 

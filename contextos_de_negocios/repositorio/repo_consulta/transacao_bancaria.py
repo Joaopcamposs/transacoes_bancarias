@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
 
 
-class RepoTransacaoBancariaLeitura:
+class TransacaoBancariaRepoConsulta:
     @staticmethod
     async def consultar_todos(session: AsyncSession) -> Sequence[TransacaoBancaria]:
         transacao_bancarias = (

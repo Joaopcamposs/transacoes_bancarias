@@ -5,7 +5,7 @@ from contextos_de_negocios.dominio.exceptions import ErroAoDeletarUsuario
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 
 
-class RepoUsuarioEscrita:
+class UsuarioRepoDominio:
     @staticmethod
     async def adicionar(
         session: AsyncSession,

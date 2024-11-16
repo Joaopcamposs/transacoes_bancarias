@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contextos_de_negocios.repositorio.orm.usuario import Usuario
 
 
-class RepoUsuarioLeitura:
+class UsuarioRepoConsulta:
     @staticmethod
     async def consultar_todos(session: AsyncSession) -> Sequence[Usuario]:
         usuarios = (await session.execute(select(Usuario))).scalars().all()

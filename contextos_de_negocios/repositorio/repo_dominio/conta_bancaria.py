@@ -7,7 +7,7 @@ from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 
 
-class RepoContaBancariaDominio:
+class ContaBancariaRepoDominio:
     @staticmethod
     async def consultar_por_numero_da_conta(
         session: AsyncSession, numero_da_conta: str
@@ -33,8 +33,6 @@ class RepoContaBancariaDominio:
         )
         return agregado
 
-
-class RepoContaBancariaEscrita:
     @staticmethod
     async def adicionar(
         session: AsyncSession,

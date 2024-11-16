@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 
 
-class RepoContaBancariaLeitura:
+class ContaBancariaRepoConsulta:
     @staticmethod
     async def consultar_todos(session: AsyncSession) -> Sequence[ContaBancaria]:
         conta_bancarias = (

@@ -1,25 +1,48 @@
 from typing import Sequence
 
-from sqlalchemy import Uuid, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from contextos_de_negocios.dominio.entidades.cliente import ClienteEntidade
 from contextos_de_negocios.repositorio.orm.cliente import Cliente
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
-class RepoClienteLeitura:
+class ClienteRepoConsulta:
     @staticmethod
-    async def consultar_todos(session: AsyncSession) -> Sequence[Cliente]:
-        clientes = (await session.execute(select(Cliente))).scalars().all()
-        return clientes
+    async def consultar_por_cpf(
+        session: AsyncSession, cpf: str
+    ) -> ClienteEntidade | None:
+        cliente = (
+            await session.execute(select(Cliente).filter_by(cpf=cpf))
+        ).scalar_one_or_none()
+        if not cliente:
+            return None
+
+        cliente_entidade = ClienteEntidade(
+            id=cliente.id,
+            nome=cliente.nome,
+            cpf=cliente.cpf,
+        )
+
+        return cliente_entidade
 
     @staticmethod
-    async def consultar_por_id(session: AsyncSession, id: Uuid) -> Cliente | None:
-        cliente = await session.get(Cliente, id)
+    async def consultar_por_filtros(
+        session: AsyncSession, filtros: Filtros
+    ) -> Sequence[Cliente]:
+        cliente = (
+            (await session.execute(select(Cliente).filter_by(**filtros)))
+            .scalars()
+            .all()
+        )
         return cliente
 
     @staticmethod
-    async def consultar_por_cpf(session: AsyncSession, cpf: str) -> Cliente | None:
+    async def consultar_um_por_filtros(
+        session: AsyncSession, filtros: Filtros
+    ) -> Cliente | None:
         cliente = (
-            await session.execute(select(Cliente).filter_by(cpf=cpf))
+            await session.execute(select(Cliente).filter_by(**filtros))
         ).scalar_one_or_none()
         return cliente

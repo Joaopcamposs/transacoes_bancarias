@@ -50,7 +50,7 @@ async def extrair_sessao(conexao: AsyncIterable = get_db()) -> AsyncSession:
 
 async def criar_primeiro_usuario() -> None:
     from contextos_de_negocios.repositorio.repo_consulta.usuario import (
-        RepoUsuarioLeitura,
+        UsuarioRepoConsulta,
     )
     from contextos_de_negocios.dominio.entidades.usuario import (
         CadastrarEAtualizarUsuario,
@@ -58,7 +58,7 @@ async def criar_primeiro_usuario() -> None:
     from contextos_de_negocios.servicos.executores.usuario import UsuarioControllers
 
     async with SessionLocal() as session:
-        usuarios = await RepoUsuarioLeitura.consultar_todos(session=session)
+        usuarios = await UsuarioRepoConsulta.consultar_todos(session=session)
         if not usuarios:
             usuario = CadastrarEAtualizarUsuario(
                 nome="Admin",

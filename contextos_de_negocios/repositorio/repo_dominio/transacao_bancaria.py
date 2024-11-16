@@ -8,7 +8,7 @@ from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
 )
 
 
-class RepoTransacaoBancariaEscrita:
+class TransacaoBancariaRepoDominio:
     @staticmethod
     async def adicionar(
         session: AsyncSession,

@@ -16,7 +16,7 @@ from contextos_de_negocios.repositorio.orm.usuario import Usuario
 from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM
 from infra.database import get_db
 from contextos_de_negocios.dominio.entidades.seguranca import TokenData
-from contextos_de_negocios.repositorio.repo_consulta.usuario import RepoUsuarioLeitura
+from contextos_de_negocios.repositorio.repo_consulta.usuario import UsuarioRepoConsulta
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/token")
 
@@ -38,7 +38,7 @@ class Servicos:
     async def autenticar_usuario(
         session: AsyncSession, email: str, senha: str
     ) -> Usuario | None:
-        usuario = await RepoUsuarioLeitura.consultar_por_email(
+        usuario = await UsuarioRepoConsulta.consultar_por_email(
             session=session, email=email
         )
 
@@ -79,7 +79,7 @@ class Servicos:
             raise NaoFoiPossivelValidarAsCredenciais(
                 headers={"WWW-Authenticate": "Bearer"}
             )
-        usuario = await RepoUsuarioLeitura.consultar_por_email(
+        usuario = await UsuarioRepoConsulta.consultar_por_email(
             session=session, email=dados_token.email
         )
         if usuario is None:

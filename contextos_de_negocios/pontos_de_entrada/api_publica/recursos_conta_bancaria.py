@@ -7,7 +7,7 @@ from contextos_de_negocios.servicos.executores.conta_bancaria import (
 )
 from contextos_de_negocios.dominio.exceptions import ContaBancariaNaoEncontrado
 from contextos_de_negocios.repositorio.repo_consulta.conta_bancaria import (
-    RepoContaBancariaLeitura,
+    ContaBancariaRepoConsulta,
 )
 from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     CadastrarContaBancaria,
@@ -42,16 +42,16 @@ class ContaBancariaRoutes:
     ):
         if id:
             conta_bancarias = [
-                await RepoContaBancariaLeitura.consultar_por_id(session=session, id=id)
+                await ContaBancariaRepoConsulta.consultar_por_id(session=session, id=id)
             ]
         elif numero_da_conta:
             conta_bancarias = [
-                await RepoContaBancariaLeitura.consultar_por_numero_da_conta(
+                await ContaBancariaRepoConsulta.consultar_por_numero_da_conta(
                     session=session, numero_da_conta=numero_da_conta
                 )
             ]
         else:
-            conta_bancarias = await RepoContaBancariaLeitura.consultar_todos(
+            conta_bancarias = await ContaBancariaRepoConsulta.consultar_todos(
                 session=session
             )
 
@@ -92,12 +92,12 @@ class ContaBancariaRoutes:
         numero_da_conta: str | None = None,
     ):
         if id:
-            conta_bancaria = await RepoContaBancariaLeitura.consultar_por_id(
+            conta_bancaria = await ContaBancariaRepoConsulta.consultar_por_id(
                 session=session, id=id
             )
         else:
             conta_bancaria = (
-                await RepoContaBancariaLeitura.consultar_por_numero_da_conta(
+                await ContaBancariaRepoConsulta.consultar_por_numero_da_conta(
                     session=session, numero_da_conta=numero_da_conta
                 )
             )
@@ -120,12 +120,12 @@ class ContaBancariaRoutes:
         numero_da_conta: str | None = None,
     ):
         if id:
-            conta_bancaria = await RepoContaBancariaLeitura.consultar_por_id(
+            conta_bancaria = await ContaBancariaRepoConsulta.consultar_por_id(
                 session=session, id=id
             )
         else:
             conta_bancaria = (
-                await RepoContaBancariaLeitura.consultar_por_numero_da_conta(
+                await ContaBancariaRepoConsulta.consultar_por_numero_da_conta(
                     session=session, numero_da_conta=numero_da_conta
                 )
             )

@@ -29,7 +29,10 @@ docker-logs:
 	docker logs transacoes_bancarias
 
 docker-build-up-compose:
-	docker-compose -f infra/docker-compose.yml up --build -d
+	docker-compose -f infra/docker-compose.yml --env-file .env up --build -d
+
+run-postgres:
+	docker-compose -f infra/docker-compose.yml --env-file .env up -d postgres_transacoes_bancarias
 
 docker-compose-run:
 	docker-compose -f infra/docker-compose.yml --env-file .env up -d

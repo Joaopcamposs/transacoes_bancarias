@@ -7,7 +7,7 @@ from contextos_de_negocios.servicos.executores.transacao_bancaria import (
 )
 from contextos_de_negocios.dominio.exceptions import TransacaoBancariaNaoEncontrado
 from contextos_de_negocios.repositorio.repo_consulta.transacao_bancaria import (
-    RepoTransacaoBancariaLeitura,
+    TransacaoBancariaRepoConsulta,
 )
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     CadastrarTransacaoBancaria,
@@ -32,12 +32,12 @@ class TransacaoBancariaRoutes:
     ):
         if id:
             transacao_bancarias = [
-                await RepoTransacaoBancariaLeitura.consultar_por_id(
+                await TransacaoBancariaRepoConsulta.consultar_por_id(
                     session=session, id=id
                 )
             ]
         else:
-            transacao_bancarias = await RepoTransacaoBancariaLeitura.consultar_todos(
+            transacao_bancarias = await TransacaoBancariaRepoConsulta.consultar_todos(
                 session=session
             )
 
