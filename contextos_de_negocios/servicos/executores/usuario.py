@@ -1,5 +1,4 @@
 from sqlalchemy import Uuid
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextos_de_negocios.dominio.agregados.usuario import Usuario as UsuarioAgregado
 from contextos_de_negocios.dominio.exceptions import (
@@ -19,13 +18,12 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 async def cadastrar_usuario(
-    session: AsyncSession,
     usuario: CadastrarUsuario,
     criptografar_senha: bool = True,
 ) -> UsuarioAgregado:
-    usuario_com_mesmo_email = await UsuarioRepoConsulta(
-        session=session
-    ).consultar_um_por_filtros(Filtros({"email": usuario.email}))
+    usuario_com_mesmo_email = await UsuarioRepoConsulta().consultar_um_por_filtros(
+        Filtros({"email": usuario.email})
+    )
 
     if usuario_com_mesmo_email:
         raise UsuarioJaCadastrado
@@ -39,7 +37,7 @@ async def cadastrar_usuario(
         criptografar_senha=criptografar_senha,
     )
 
-    id_resultado = await UsuarioRepoDominio(session=session).adicionar(
+    id_resultado = await UsuarioRepoDominio().adicionar(
         usuario=novo_usuario,
         tipo_operacao=TipoOperacao.INSERCAO,
     )
@@ -48,12 +46,8 @@ async def cadastrar_usuario(
     return novo_usuario
 
 
-async def atualizar_usuario(
-    session: AsyncSession, usuario_att: AtualizarUsuario
-) -> UsuarioAgregado:
-    usuario = await UsuarioRepoDominio(session=session).consultar_por_id(
-        id=usuario_att._id
-    )
+async def atualizar_usuario(usuario_att: AtualizarUsuario) -> UsuarioAgregado:
+    usuario = await UsuarioRepoDominio().consultar_por_id(id=usuario_att._id)
 
     if not usuario:
         raise UsuarioNaoEncontrado
@@ -66,19 +60,19 @@ async def atualizar_usuario(
         ativo=usuario_att.ativo,
     )
 
-    await UsuarioRepoDominio(session=session).adicionar(
+    await UsuarioRepoDominio().adicionar(
         usuario=usuario, tipo_operacao=TipoOperacao.ATUALIZACAO
     )
 
     return usuario
 
 
-async def remover_usuario(session: AsyncSession, id: Uuid) -> str:
-    usuario = await UsuarioRepoDominio(session=session).consultar_por_id(id=id)
+async def remover_usuario(id: Uuid) -> str:
+    usuario = await UsuarioRepoDominio().consultar_por_id(id=id)
 
     if not usuario:
         raise UsuarioNaoEncontrado
 
-    await UsuarioRepoDominio(session=session).remover(usuario=usuario)
+    await UsuarioRepoDominio().remover(usuario=usuario)
 
     return "Usuário deletado!"

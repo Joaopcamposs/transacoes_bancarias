@@ -4,7 +4,7 @@ from sqlalchemy import Column, Uuid, String
 from sqlalchemy.orm import relationship
 
 from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
-from infra.database import Base
+from infra.banco_de_dados import Base
 
 
 class Cliente(Base):

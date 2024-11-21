@@ -2,9 +2,8 @@ import sentry_sdk
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-import infra.database
 from contextos_de_negocios.utils.constantes import SENTRY_DSN
-from infra.database import engine, criar_primeiro_usuario
+from infra.banco_de_dados import criar_primeiro_usuario, get_engine, Base
 
 from contextos_de_negocios.pontos_de_entrada.api_publica.recursos_seguranca import (
     router as servicos_router,
@@ -57,8 +56,8 @@ async def trigger_error():
 
 @app.on_event("startup")
 async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(infra.database.Base.metadata.create_all)
+    async with get_engine().begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     await criar_primeiro_usuario()
 
 

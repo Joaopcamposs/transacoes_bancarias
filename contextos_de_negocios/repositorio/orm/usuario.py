@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from sqlalchemy import Column, Uuid, String, Boolean
 
-from infra.database import Base
+from infra.banco_de_dados import Base
 
 
 class Usuario(Base):

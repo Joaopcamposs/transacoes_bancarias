@@ -13,9 +13,6 @@ class AtualizarCliente(BaseModel):
     cpf: str
     _id: UUID4 | None = None
 
-    class Config:
-        underscore_attrs_are_private = True  # Torna os atributos com "_" privados
-
 
 class LerCliente(BaseModel):
     id: UUID4

@@ -1,6 +1,5 @@
 from fastapi import Depends, APIRouter
 from pydantic import UUID4
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextos_de_negocios.dominio.exceptions import ContaBancariaNaoEncontrado
 from contextos_de_negocios.repositorio.repo_consulta.conta_bancaria import (
@@ -17,17 +16,16 @@ from contextos_de_negocios.servicos.executores.conta_bancaria import (
     atualizar_conta,
     remover_conta,
 )
-from contextos_de_negocios.servicos.executores.seguranca import Seguranca
+from contextos_de_negocios.servicos.executores.seguranca import obter_usuario_atual
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     LerTransacaoBancaria,
 )
-from infra.database import get_db
 from libs.ddd.adaptadores.visualizadores import Filtros
 
 router = APIRouter(
     prefix="/api",
     tags=["Conta Bancaria"],
-    dependencies=[Depends(Seguranca.obter_usuario_atual)],
+    dependencies=[Depends(obter_usuario_atual)],
 )
 
 
@@ -36,7 +34,6 @@ router = APIRouter(
     response_model=list[LerContaBancaria] | LerContaBancariaETransacoes,
 )
 async def listar(
-    session: AsyncSession = Depends(get_db),
     id: UUID4 | None = None,
     numero_da_conta: str | None = None,
     listar_transacoes: bool = False,
@@ -48,9 +45,9 @@ async def listar(
         }
     )
 
-    conta_bancarias = await ContaBancariaRepoConsulta(
-        session=session
-    ).consultar_por_filtros(filtros=filtros)
+    conta_bancarias = await ContaBancariaRepoConsulta().consultar_por_filtros(
+        filtros=filtros
+    )
 
     if not conta_bancarias:
         raise ContaBancariaNaoEncontrado
@@ -71,18 +68,14 @@ async def listar(
 @router.post("/conta_bancaria", response_model=LerContaBancaria)
 async def cadastrar(
     novo_conta_bancaria: CadastrarContaBancaria,
-    session: AsyncSession = Depends(get_db),
 ):
-    conta_bancaria = await cadastrar_conta(
-        session=session, conta_bancaria=novo_conta_bancaria
-    )
+    conta_bancaria = await cadastrar_conta(conta_bancaria=novo_conta_bancaria)
     return conta_bancaria
 
 
 @router.put("/conta_bancaria", response_model=LerContaBancaria)
 async def atualizar(
     conta_bancaria_atualizado: AtualizarContaBancaria,
-    session: AsyncSession = Depends(get_db),
     id: UUID4 | None = None,
     numero_da_conta: str | None = None,
 ):
@@ -93,16 +86,15 @@ async def atualizar(
         }
     )
 
-    conta_bancaria = await ContaBancariaRepoConsulta(
-        session=session
-    ).consultar_um_por_filtros(filtros=filtros)
+    conta_bancaria = await ContaBancariaRepoConsulta().consultar_um_por_filtros(
+        filtros=filtros
+    )
 
     if not conta_bancaria:
         raise ContaBancariaNaoEncontrado
 
     conta_bancaria_atualizado._numero_da_conta_antigo = conta_bancaria.numero_da_conta
     conta_bancaria = await atualizar_conta(
-        session=session,
         conta_bancaria_att=conta_bancaria_atualizado,
     )
     return conta_bancaria
@@ -110,7 +102,6 @@ async def atualizar(
 
 @router.delete("/conta_bancaria")
 async def remover(
-    session: AsyncSession = Depends(get_db),
     id: UUID4 | None = None,
     numero_da_conta: str | None = None,
 ):
@@ -121,12 +112,12 @@ async def remover(
         }
     )
 
-    conta_bancaria = await ContaBancariaRepoConsulta(
-        session=session
-    ).consultar_um_por_filtros(filtros=filtros)
+    conta_bancaria = await ContaBancariaRepoConsulta().consultar_um_por_filtros(
+        filtros=filtros
+    )
 
     if not conta_bancaria:
         raise ContaBancariaNaoEncontrado
 
-    conta_bancaria_deletado = await remover_conta(session=session, id=conta_bancaria.id)
+    conta_bancaria_deletado = await remover_conta(id=conta_bancaria.id)
     return conta_bancaria_deletado

@@ -3,7 +3,7 @@ from uuid import uuid4
 from sqlalchemy import Column, String, Uuid, Numeric, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
-from infra.database import Base
+from infra.banco_de_dados import Base
 
 
 class TransacaoBancaria(Base):

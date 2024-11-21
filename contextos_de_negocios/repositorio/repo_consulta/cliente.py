@@ -12,11 +12,12 @@ class ClienteRepoConsulta(RepositorioConsulta):
     async def consultar_por_filtros(
         self, filtros: Filtros
     ) -> Sequence[ClienteEntidade]:
-        clientes = (
-            (await self.session.execute(select(Cliente).filter_by(**filtros)))
-            .scalars()
-            .all()
-        )
+        async with self.session() as session:
+            clientes = (
+                (await session.execute(select(Cliente).filter_by(**filtros)))
+                .scalars()
+                .all()
+            )
 
         clientes_entidade = [
             ClienteEntidade(

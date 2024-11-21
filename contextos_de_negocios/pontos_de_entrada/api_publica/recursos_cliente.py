@@ -1,6 +1,5 @@
 from fastapi import Depends, APIRouter
 from pydantic import UUID4
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextos_de_negocios.dominio.exceptions import (
     ClienteNaoEncontrado,
@@ -16,20 +15,18 @@ from contextos_de_negocios.servicos.executores.cliente import (
     atualizar_cliente,
     remover_cliente,
 )
-from contextos_de_negocios.servicos.executores.seguranca import Seguranca
-from infra.database import get_db
+from contextos_de_negocios.servicos.executores.seguranca import obter_usuario_atual
 from libs.ddd.adaptadores.visualizadores import Filtros
 
 router = APIRouter(
     prefix="/api",
     tags=["Clientes"],
-    dependencies=[Depends(Seguranca.obter_usuario_atual)],
+    dependencies=[Depends(obter_usuario_atual)],
 )
 
 
 @router.get("/clientes", response_model=list[LerCliente])
 async def listar(
-    session: AsyncSession = Depends(get_db),
     id: UUID4 | None = None,
     cpf: str | None = None,
 ):
@@ -40,9 +37,7 @@ async def listar(
         }
     )
 
-    clientes = await ClienteRepoConsulta(session=session).consultar_por_filtros(
-        filtros=filtros
-    )
+    clientes = await ClienteRepoConsulta().consultar_por_filtros(filtros=filtros)
 
     if not clientes:
         raise ClienteNaoEncontrado
@@ -53,16 +48,14 @@ async def listar(
 @router.post("/cliente", response_model=LerCliente)
 async def cadastrar(
     novo_cliente: CadastrarCliente,
-    session: AsyncSession = Depends(get_db),
 ):
-    cliente = await cadastrar_cliente(session=session, cliente=novo_cliente)
+    cliente = await cadastrar_cliente(cliente=novo_cliente)
     return cliente
 
 
 @router.put("/cliente", response_model=LerCliente)
 async def atualizar(
     cliente_atualizado: AtualizarCliente,
-    session: AsyncSession = Depends(get_db),
     id: UUID4 | None = None,
     cpf: str | None = None,
 ):
@@ -73,21 +66,18 @@ async def atualizar(
         }
     )
 
-    cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
-        filtros=filtros
-    )
+    cliente = await ClienteRepoConsulta().consultar_um_por_filtros(filtros=filtros)
 
     if not cliente:
         raise ClienteNaoEncontrado
 
     cliente_atualizado._id = cliente.id
-    cliente = await atualizar_cliente(session=session, cliente_att=cliente_atualizado)
+    cliente = await atualizar_cliente(cliente_att=cliente_atualizado)
     return cliente
 
 
 @router.delete("/cliente")
 async def remover(
-    session: AsyncSession = Depends(get_db),
     id: UUID4 | None = None,
     cpf: str | None = None,
 ):
@@ -98,12 +88,10 @@ async def remover(
         }
     )
 
-    cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
-        filtros=filtros
-    )
+    cliente = await ClienteRepoConsulta().consultar_um_por_filtros(filtros=filtros)
 
     if not cliente:
         raise ClienteNaoEncontrado
 
-    cliente_deletado = await remover_cliente(session=session, id=cliente.id)
+    cliente_deletado = await remover_cliente(id=cliente.id)
     return cliente_deletado

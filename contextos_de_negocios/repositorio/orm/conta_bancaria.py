@@ -4,7 +4,7 @@ from sqlalchemy import Column, Uuid, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 
 from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
-from infra.database import Base
+from infra.banco_de_dados import Base
 
 
 class ContaBancaria(Base):

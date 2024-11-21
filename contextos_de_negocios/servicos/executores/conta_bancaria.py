@@ -1,5 +1,4 @@
 from sqlalchemy import Uuid
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from contextos_de_negocios.dominio.exceptions import (
     ClienteNaoEncontrado,
@@ -23,19 +22,18 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 async def cadastrar_conta(
-    session: AsyncSession,
     conta_bancaria: CadastrarContaBancaria,
 ) -> Conta:
-    conta_bancaria_com_mesmo_numero = await ContaBancariaRepoConsulta(
-        session=session
-    ).consultar_um_por_filtros(
-        Filtros({"numero_da_conta": conta_bancaria.numero_da_conta})
+    conta_bancaria_com_mesmo_numero = (
+        await ContaBancariaRepoConsulta().consultar_um_por_filtros(
+            Filtros({"numero_da_conta": conta_bancaria.numero_da_conta})
+        )
     )
     if conta_bancaria_com_mesmo_numero:
         raise ContaBancariaJaCadastrado
 
     # Verifica se o CPF existe
-    cliente = await ClienteRepoConsulta(session=session).consultar_um_por_filtros(
+    cliente = await ClienteRepoConsulta().consultar_um_por_filtros(
         Filtros({"cpf": conta_bancaria.cpf_cliente})
     )
     if not cliente:
@@ -47,7 +45,7 @@ async def cadastrar_conta(
         cpf_cliente=conta_bancaria.cpf_cliente,
     )
 
-    id_resultado = await ContaBancariaRepoDominio(session=session).adicionar(
+    id_resultado = await ContaBancariaRepoDominio().adicionar(
         conta=nova_conta_bancaria,
         tipo_operacao=TipoOperacao.INSERCAO,
     )
@@ -57,12 +55,9 @@ async def cadastrar_conta(
 
 
 async def atualizar_conta(
-    session: AsyncSession,
     conta_bancaria_att: AtualizarContaBancaria,
 ) -> Conta:
-    conta = await ContaBancariaRepoDominio(
-        session=session
-    ).consultar_por_numero_da_conta(
+    conta = await ContaBancariaRepoDominio().consultar_por_numero_da_conta(
         numero_da_conta=conta_bancaria_att._numero_da_conta_antigo
     )
 
@@ -74,7 +69,7 @@ async def atualizar_conta(
         cpf_cliente=conta_bancaria_att.cpf_cliente,
     )
 
-    await ContaBancariaRepoDominio(session=session).adicionar(
+    await ContaBancariaRepoDominio().adicionar(
         conta=conta,
         tipo_operacao=TipoOperacao.ATUALIZACAO,
     )
@@ -82,12 +77,12 @@ async def atualizar_conta(
     return conta
 
 
-async def remover_conta(session: AsyncSession, id: Uuid) -> str:
-    conta = await ContaBancariaRepoDominio(session=session).consultar_por_id(id=id)
+async def remover_conta(id: Uuid) -> str:
+    conta = await ContaBancariaRepoDominio().consultar_por_id(id=id)
 
     if not conta:
         raise ContaBancariaNaoEncontrado
 
-    await ContaBancariaRepoDominio(session=session).remover(conta=conta)
+    await ContaBancariaRepoDominio().remover(conta=conta)
 
     return "Conta Bancaria deletada!"
