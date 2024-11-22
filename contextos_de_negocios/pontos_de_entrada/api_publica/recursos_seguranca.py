@@ -13,8 +13,7 @@ from contextos_de_negocios.dominio.exceptions import (
     CredenciaisIncorretas,
 )
 from contextos_de_negocios.dominio.entidades.seguranca import Token
-from contextos_de_negocios.repositorio.orm.usuario import Usuario
-from contextos_de_negocios.dominio.entidades.usuario import LerUsuario
+from contextos_de_negocios.dominio.entidades.usuario import LerUsuario, UsuarioEntidade
 from contextos_de_negocios.utils.constantes import ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/api", tags=["Login"])
@@ -22,7 +21,7 @@ router = APIRouter(prefix="/api", tags=["Login"])
 
 @router.get("/usuario/me", response_model=LerUsuario)
 async def ler_usuario_atual(
-    usuario_atual: Usuario = Depends(obter_usuario_atual),
+    usuario_atual: UsuarioEntidade = Depends(obter_usuario_atual),
 ):
     return usuario_atual
 

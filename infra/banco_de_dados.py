@@ -1,8 +1,7 @@
 import os
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, registry, declarative_base
 
 from contextos_de_negocios.utils.constantes import (
     SENHA_PRIMEIRO_USUARIO,
@@ -29,6 +28,7 @@ def obter_uri_do_banco_de_dados(eh_teste: bool = False) -> str:
     return database_uri
 
 
+mapper_registry = registry()
 Base = declarative_base()
 
 

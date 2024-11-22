@@ -4,7 +4,6 @@ from sqlalchemy import select, insert, delete, update, Uuid
 from sqlalchemy.orm import joinedload
 
 from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
-from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
@@ -15,8 +14,8 @@ class ContaBancariaRepoDominio(RepositorioDominio):
             conta_bancaria = (
                 (
                     await self.session.execute(
-                        select(ContaBancaria)
-                        .options(joinedload(ContaBancaria.transacoes))
+                        select(Conta)
+                        .options(joinedload(Conta.transacoes))
                         .filter_by(id=id)
                         .with_for_update()
                     )
@@ -42,8 +41,8 @@ class ContaBancariaRepoDominio(RepositorioDominio):
             conta_bancaria = (
                 (
                     await self.session.execute(
-                        select(ContaBancaria)
-                        .options(joinedload(ContaBancaria.transacoes))
+                        select(Conta)
+                        .options(joinedload(Conta.transacoes))
                         .filter_by(numero_da_conta=numero_da_conta)
                         .with_for_update()
                     )
@@ -79,20 +78,14 @@ class ContaBancariaRepoDominio(RepositorioDominio):
 
                 match tipo_operacao:
                     case TipoOperacao.INSERCAO:
-                        operacao = (
-                            insert(ContaBancaria)
-                            .values(dados)
-                            .returning(ContaBancaria.id)
-                        )
+                        operacao = insert(Conta).values(dados).returning(Conta.id)
 
                         resultado = await self.session.execute(operacao)
                         await self.session.commit()
 
                     case TipoOperacao.ATUALIZACAO:
                         operacao = (
-                            update(ContaBancaria)
-                            .where(ContaBancaria.id == conta.id)
-                            .values(dados)
+                            update(Conta).where(Conta.id == conta.id).values(dados)
                         )
 
                         await self.session.execute(operacao)
@@ -110,7 +103,7 @@ class ContaBancariaRepoDominio(RepositorioDominio):
     async def remover(self, conta: Conta) -> None:
         async with self:
             try:
-                operacao = delete(ContaBancaria).where(ContaBancaria.id == conta.id)
+                operacao = delete(Conta).where(Conta.id == conta.id)
 
                 await self.session.execute(operacao)
                 await self.session.commit()

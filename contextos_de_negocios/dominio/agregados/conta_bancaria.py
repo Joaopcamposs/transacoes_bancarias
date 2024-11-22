@@ -7,7 +7,6 @@ from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.exceptions import (
     SaldoInsuficienteParaRealizarTransacao,
 )
-from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
 from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
     TipoTransacao,
 )
@@ -24,7 +23,7 @@ class Conta:
     saldo: Decimal
     cpf_cliente: CPF | str
     id: UUID | None = None
-    transacoes: list[TransacaoBancaria] | None = None
+    transacoes: list[Transacao] | None = None
 
     @classmethod
     def retornar_agregado_para_cadastro(

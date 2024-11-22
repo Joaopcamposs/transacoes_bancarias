@@ -2,8 +2,8 @@ from typing import Sequence
 
 from sqlalchemy import select
 
+from contextos_de_negocios.dominio.agregados.cliente import Cliente
 from contextos_de_negocios.dominio.entidades.cliente import ClienteEntidade
-from contextos_de_negocios.repositorio.orm.cliente import Cliente
 from libs.ddd.adaptadores.repositorio import RepositorioConsulta
 from libs.ddd.adaptadores.visualizadores import Filtros
 

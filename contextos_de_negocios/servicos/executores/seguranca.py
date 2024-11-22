@@ -5,11 +5,12 @@ from fastapi import Depends
 from jwt import InvalidTokenError
 from typing_extensions import Annotated
 
+from contextos_de_negocios.dominio.agregados.usuario import Usuario
+from contextos_de_negocios.dominio.entidades.usuario import UsuarioEntidade
 from contextos_de_negocios.dominio.exceptions import (
     PermissaoFaltando,
     NaoFoiPossivelValidarAsCredenciais,
 )
-from contextos_de_negocios.repositorio.orm.usuario import Usuario
 from contextos_de_negocios.repositorio.repo_dominio.usuario import UsuarioRepoDominio
 from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM, oauth2_scheme
 from contextos_de_negocios.dominio.entidades.seguranca import TokenData
@@ -43,7 +44,7 @@ def criar_token(data: dict, tempo_de_expiracao: int | None = None) -> str:
 
 async def obter_usuario_atual(
     token: Annotated[str, Depends(oauth2_scheme)],
-):
+) -> UsuarioEntidade:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
@@ -71,7 +72,3 @@ async def obter_usuario_atual_adm(
     if not usuario.adm:
         raise PermissaoFaltando
     return usuario
-
-
-UsuarioAtual = Annotated[Usuario, Depends(obter_usuario_atual)]
-UsuarioAtualADM = Annotated[Usuario, Depends(obter_usuario_atual_adm)]

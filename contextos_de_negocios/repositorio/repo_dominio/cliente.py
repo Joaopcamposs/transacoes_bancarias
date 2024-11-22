@@ -2,14 +2,15 @@ from uuid import UUID
 
 from sqlalchemy import insert, update, delete, Uuid, select
 
-from contextos_de_negocios.dominio.agregados.cliente import Cliente as ClienteAgregado
-from contextos_de_negocios.repositorio.orm.cliente import Cliente
+from contextos_de_negocios.dominio.agregados.cliente import (
+    Cliente,
+)
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
 
 class ClienteRepoDominio(RepositorioDominio):
-    async def consultar_por_id(self, id: Uuid) -> ClienteAgregado | None:
+    async def consultar_por_id(self, id: Uuid) -> Cliente | None:
         async with self:
             cliente = (
                 await self.session.execute(select(Cliente).where(Cliente.id == id))
@@ -18,7 +19,7 @@ class ClienteRepoDominio(RepositorioDominio):
             if not cliente:
                 return None
 
-            agregado = ClienteAgregado(
+            agregado = Cliente(
                 id=cliente.id,
                 nome=cliente.nome,
                 cpf=cliente.cpf,
@@ -27,7 +28,7 @@ class ClienteRepoDominio(RepositorioDominio):
 
     async def adicionar(
         self,
-        cliente: ClienteAgregado,
+        cliente: Cliente,
         tipo_operacao: TipoOperacao,
     ) -> UUID:
         async with self:
@@ -63,7 +64,7 @@ class ClienteRepoDominio(RepositorioDominio):
 
         return id_resultado
 
-    async def remover(self, cliente: ClienteAgregado) -> None:
+    async def remover(self, cliente: Cliente) -> None:
         async with self:
             try:
                 operacao = delete(Cliente).where(Cliente.id == cliente.id)

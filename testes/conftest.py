@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from contextos_de_negocios.utils.constantes import SQLITE_TESTE
-from infra.banco_de_dados import Base
 from contextos_de_negocios.main import app
+from infra.banco_de_dados import mapper_registry
 from testes.mocks import (
     mock_cliente,
     mock_cliente_gen,
@@ -55,7 +55,7 @@ async def limpar_banco_de_dados(test_engine):
     ]
     async with testing_session() as session:
         for table_name in lista_de_tabelas:
-            table = Table(table_name, Base().metadata, autoload=True)
+            table = Table(table_name, mapper_registry.metadata, autoload=True)
             try:
                 await session.execute(table.delete())
             except Exception as e:

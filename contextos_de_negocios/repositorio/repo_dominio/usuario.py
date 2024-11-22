@@ -2,14 +2,13 @@ from uuid import UUID
 
 from sqlalchemy import Uuid, select, insert, update, delete
 
-from contextos_de_negocios.repositorio.orm.usuario import Usuario
-from contextos_de_negocios.dominio.agregados.usuario import Usuario as UsuarioAgregado
+from contextos_de_negocios.dominio.agregados.usuario import Usuario
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
 
 class UsuarioRepoDominio(RepositorioDominio):
-    async def consultar_por_id(self, id: Uuid) -> UsuarioAgregado | None:
+    async def consultar_por_id(self, id: Uuid) -> Usuario | None:
         async with self:
             usuario = (
                 await self.session.execute(select(Usuario).where(Usuario.id == id))
@@ -18,7 +17,7 @@ class UsuarioRepoDominio(RepositorioDominio):
             if not usuario:
                 return None
 
-            agregado = UsuarioAgregado(
+            agregado = Usuario(
                 id=usuario.id,
                 nome=usuario.nome,
                 email=usuario.email,
@@ -28,7 +27,7 @@ class UsuarioRepoDominio(RepositorioDominio):
             )
         return agregado
 
-    async def consultar_por_email(self, email: str) -> UsuarioAgregado | None:
+    async def consultar_por_email(self, email: str) -> Usuario | None:
         async with self:
             usuario = (
                 await self.session.execute(
@@ -39,7 +38,7 @@ class UsuarioRepoDominio(RepositorioDominio):
             if not usuario:
                 return None
 
-            agregado = UsuarioAgregado(
+            agregado = Usuario(
                 id=usuario.id,
                 nome=usuario.nome,
                 email=usuario.email,
@@ -51,7 +50,7 @@ class UsuarioRepoDominio(RepositorioDominio):
 
     async def adicionar(
         self,
-        usuario: UsuarioAgregado,
+        usuario: Usuario,
         tipo_operacao: TipoOperacao,
     ) -> UUID:
         async with self:
@@ -90,7 +89,7 @@ class UsuarioRepoDominio(RepositorioDominio):
 
         return id_resultado
 
-    async def remover(self, usuario: UsuarioAgregado) -> None:
+    async def remover(self, usuario: Usuario) -> None:
         async with self:
             try:
                 operacao = delete(Usuario).where(Usuario.id == usuario.id)

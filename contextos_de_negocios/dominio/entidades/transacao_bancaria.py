@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, UUID4, field_validator
 
-from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
+from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
     TipoTransacao,
 )
@@ -36,7 +36,7 @@ class LerTransacaoBancaria(BaseModel):
         return Decimal(v).quantize(Decimal("0.00"))
 
     @staticmethod
-    def from_transacao(transacao: TransacaoBancaria):
+    def from_transacao(transacao: Transacao):
         return LerTransacaoBancaria(
             id=transacao.id,
             tipo=transacao.tipo,

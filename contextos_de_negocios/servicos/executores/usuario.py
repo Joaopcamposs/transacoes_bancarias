@@ -1,6 +1,6 @@
 from sqlalchemy import Uuid
 
-from contextos_de_negocios.dominio.agregados.usuario import Usuario as UsuarioAgregado
+from contextos_de_negocios.dominio.agregados.usuario import Usuario
 from contextos_de_negocios.dominio.exceptions import (
     UsuarioNaoEncontrado,
     UsuarioJaCadastrado,
@@ -20,7 +20,7 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 async def cadastrar_usuario(
     usuario: CadastrarUsuario,
     criptografar_senha: bool = True,
-) -> UsuarioAgregado:
+) -> Usuario:
     usuario_com_mesmo_email = await UsuarioRepoConsulta().consultar_um_por_filtros(
         Filtros({"email": usuario.email})
     )
@@ -28,7 +28,7 @@ async def cadastrar_usuario(
     if usuario_com_mesmo_email:
         raise UsuarioJaCadastrado
 
-    novo_usuario = UsuarioAgregado.retornar_agregado_para_cadastro(
+    novo_usuario = Usuario.retornar_agregado_para_cadastro(
         nome=usuario.nome,
         email=usuario.email,
         senha=usuario.senha,
@@ -46,7 +46,7 @@ async def cadastrar_usuario(
     return novo_usuario
 
 
-async def atualizar_usuario(usuario_att: AtualizarUsuario) -> UsuarioAgregado:
+async def atualizar_usuario(usuario_att: AtualizarUsuario) -> Usuario:
     usuario = await UsuarioRepoDominio().consultar_por_id(id=usuario_att._id)
 
     if not usuario:

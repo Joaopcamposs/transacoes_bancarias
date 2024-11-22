@@ -3,10 +3,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel, UUID4, field_validator
 
+from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     LerTransacaoBancaria,
 )
-from contextos_de_negocios.repositorio.orm.transacao_bancaria import TransacaoBancaria
 
 
 class CadastrarContaBancaria(BaseModel):
@@ -57,4 +57,4 @@ class ContaEntidade:
     numero_da_conta: str
     saldo: Decimal
     cpf_cliente: str
-    transacoes: list[TransacaoBancaria] | None = None
+    transacoes: list[Transacao] | None = None

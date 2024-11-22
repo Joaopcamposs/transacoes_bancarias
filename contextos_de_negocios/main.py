@@ -3,7 +3,12 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from contextos_de_negocios.utils.constantes import SENTRY_DSN
-from infra.banco_de_dados import Base, criar_primeiro_usuario, obter_async_engine
+from infra import start_mappers
+from infra.banco_de_dados import (
+    criar_primeiro_usuario,
+    obter_async_engine,
+    mapper_registry,
+)
 
 from contextos_de_negocios.pontos_de_entrada.api_publica.recursos_seguranca import (
     router as servicos_router,
@@ -56,8 +61,9 @@ async def trigger_error():
 
 @app.on_event("startup")
 async def startup():
+    start_mappers()
     async with obter_async_engine().begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(mapper_registry.metadata.create_all)
     await criar_primeiro_usuario()
 
 

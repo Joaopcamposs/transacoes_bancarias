@@ -3,8 +3,8 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
 from contextos_de_negocios.dominio.entidades.conta_bancaria import ContaEntidade
-from contextos_de_negocios.repositorio.orm.conta_bancaria import ContaBancaria
 from libs.ddd.adaptadores.repositorio import RepositorioConsulta
 from libs.ddd.adaptadores.visualizadores import Filtros
 
@@ -15,8 +15,8 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
             contas = (
                 (
                     await self.session.execute(
-                        select(ContaBancaria)
-                        .options(joinedload(ContaBancaria.transacoes))
+                        select(Conta)
+                        .options(joinedload(Conta.transacoes))
                         .filter_by(**filtros)
                     )
                 )
@@ -43,8 +43,8 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
             conta = (
                 (
                     await self.session.execute(
-                        select(ContaBancaria)
-                        .options(joinedload(ContaBancaria.transacoes))
+                        select(Conta)
+                        .options(joinedload(Conta.transacoes))
                         .filter_by(**filtros)
                     )
                 )

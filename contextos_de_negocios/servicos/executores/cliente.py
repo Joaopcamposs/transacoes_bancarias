@@ -1,6 +1,6 @@
 from sqlalchemy import Uuid
 
-from contextos_de_negocios.dominio.agregados.cliente import Cliente as ClienteAgregado
+from contextos_de_negocios.dominio.agregados.cliente import Cliente
 from contextos_de_negocios.dominio.exceptions import (
     ClienteJaCadastrado,
     ClienteNaoEncontrado,
@@ -19,7 +19,7 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 
 async def cadastrar_cliente(
     cliente: CadastrarCliente,
-) -> ClienteAgregado:
+) -> Cliente:
     cliente_com_mesmo_cpf = await ClienteRepoConsulta().consultar_um_por_filtros(
         Filtros({"cpf": cliente.cpf})
     )
@@ -27,7 +27,7 @@ async def cadastrar_cliente(
     if cliente_com_mesmo_cpf:
         raise ClienteJaCadastrado
 
-    novo_cliente = ClienteAgregado.retornar_agregado_para_cadastro(
+    novo_cliente = Cliente.retornar_agregado_para_cadastro(
         nome=cliente.nome,
         cpf=CPF(cliente.cpf),
     )
@@ -40,7 +40,7 @@ async def cadastrar_cliente(
     return novo_cliente
 
 
-async def atualizar_cliente(cliente_att: AtualizarCliente) -> ClienteAgregado:
+async def atualizar_cliente(cliente_att: AtualizarCliente) -> Cliente:
     cliente = await ClienteRepoDominio().consultar_por_id(id=cliente_att._id)
 
     if not cliente:

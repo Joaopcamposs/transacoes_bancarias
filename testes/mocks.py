@@ -6,8 +6,8 @@ import pytest
 import pytest_asyncio
 from pydantic import UUID4
 
+from contextos_de_negocios.dominio.agregados.cliente import Cliente
 from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
-from contextos_de_negocios.repositorio.orm.cliente import Cliente
 from contextos_de_negocios.dominio.entidades.cliente import CadastrarCliente
 from contextos_de_negocios.servicos.executores.cliente import cadastrar_cliente
 
