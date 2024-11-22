@@ -41,9 +41,7 @@ class ClienteRepoDominio(RepositorioDominio):
                 match tipo_operacao:
                     case TipoOperacao.INSERCAO:
                         operacao = insert(Cliente).values(dados).returning(Cliente.id)
-
                         resultado = await self.session.execute(operacao)
-                        await self.session.commit()
 
                     case TipoOperacao.ATUALIZACAO:
                         operacao = (
@@ -51,11 +49,11 @@ class ClienteRepoDominio(RepositorioDominio):
                             .where(Cliente.id == cliente.id)
                             .values(dados)
                         )
-
                         await self.session.execute(operacao)
-                        await self.session.commit()
+
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro
 
             id_resultado: UUID | None = cliente.id
@@ -70,7 +68,7 @@ class ClienteRepoDominio(RepositorioDominio):
                 operacao = delete(Cliente).where(Cliente.id == cliente.id)
 
                 await self.session.execute(operacao)
-                await self.session.commit()
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro

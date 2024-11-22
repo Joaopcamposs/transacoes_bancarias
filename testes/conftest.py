@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from contextos_de_negocios.utils.constantes import SQLITE_TESTE
 from contextos_de_negocios.main import app
+from infra import start_mappers
 from infra.banco_de_dados import mapper_registry
 from testes.mocks import (
     mock_cliente,
@@ -23,6 +24,13 @@ from testes.mocks import (
 @pytest.fixture(scope="session", autouse=True)
 def set_test_env():
     os.environ["TEST_ENV"] = "true"
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def inicializar_banco_de_dados(test_engine):
+    start_mappers()
+    async with test_engine.begin() as conn:
+        await conn.run_sync(mapper_registry.metadata.create_all)
 
 
 @pytest.fixture
@@ -55,7 +63,7 @@ async def limpar_banco_de_dados(test_engine):
     ]
     async with testing_session() as session:
         for table_name in lista_de_tabelas:
-            table = Table(table_name, mapper_registry.metadata, autoload=True)
+            table = Table(table_name, mapper_registry.metadata)
             try:
                 await session.execute(table.delete())
             except Exception as e:

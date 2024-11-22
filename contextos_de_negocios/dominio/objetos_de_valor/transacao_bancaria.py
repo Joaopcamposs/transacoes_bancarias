@@ -2,6 +2,6 @@ import enum
 
 
 class TipoTransacao(enum.Enum):
-    SAQUE = "saque"
     DEPOSITO = "deposito"
+    SAQUE = "saque"
     TRANSFERENCIA = "transferencia"

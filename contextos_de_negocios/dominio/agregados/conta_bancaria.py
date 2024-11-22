@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from _decimal import Decimal
@@ -13,7 +13,9 @@ from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
     CadastrarTransacaoBancaria,
 )
-from contextos_de_negocios.utils.constantes import DATA_AGORA
+from contextos_de_negocios.dominio.regras_de_negocio.transacao_bancaria import (
+    obter_hora_local,
+)
 from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta, CPF
 
 
@@ -23,7 +25,7 @@ class Conta:
     saldo: Decimal
     cpf_cliente: CPF | str
     id: UUID | None = None
-    transacoes: list[Transacao] | None = None
+    transacoes: list[Transacao] = field(default_factory=list)
 
     @classmethod
     def retornar_agregado_para_cadastro(
@@ -67,7 +69,7 @@ class Conta:
             tipo=TipoTransacao.SAQUE,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
-            data=DATA_AGORA,
+            data=obter_hora_local(),
         )
 
     def realizar_deposito(self, valor: Decimal) -> Transacao:
@@ -76,7 +78,7 @@ class Conta:
             tipo=TipoTransacao.DEPOSITO,
             valor=valor,
             numero_da_conta=self.numero_da_conta,
-            data=DATA_AGORA,
+            data=obter_hora_local(),
         )
 
     def realizar_transferencia(
@@ -90,7 +92,7 @@ class Conta:
             valor=valor,
             numero_da_conta=self.numero_da_conta,
             numero_da_conta_destino=numero_da_conta_destino,
-            data=DATA_AGORA,
+            data=obter_hora_local(),
         )
 
     def cadastrar(self) -> None: ...

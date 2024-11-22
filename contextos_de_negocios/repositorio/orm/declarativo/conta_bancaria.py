@@ -4,6 +4,7 @@ from uuid import uuid4
 from sqlalchemy import Uuid, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
+from contextos_de_negocios.repositorio.orm.declarativo.cliente import ClienteDB
 from contextos_de_negocios.repositorio.orm.declarativo.transacao_bancaria import (
     TransacaoBancariaDB,
 )

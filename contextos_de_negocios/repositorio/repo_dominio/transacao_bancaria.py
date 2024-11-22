@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import update, insert
+from sqlalchemy import update, insert, select
 
 from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
 from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
@@ -17,6 +17,11 @@ class TransacaoBancariaRepoDominio(RepositorioDominio):
     ) -> UUID:
         async with self:
             try:
+                # Bloqueio explícito das contas para evitar problemas de concorrência
+                await self.__bloquear_contas_para_concorrencia(
+                    transacao.numero_da_conta, transacao.numero_da_conta_destino
+                )
+
                 dados = {
                     "tipo": transacao.tipo.value,
                     "valor": transacao.valor,
@@ -52,9 +57,9 @@ class TransacaoBancariaRepoDominio(RepositorioDominio):
                     )
                     await self.session.execute(atualizar_saldo_conta_destino)
 
-                await self.session.commit()
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro
 
             id_resultado: UUID | None = transacao.id
@@ -62,3 +67,21 @@ class TransacaoBancariaRepoDominio(RepositorioDominio):
                 id_resultado = resultado.scalar_one_or_none()
 
         return id_resultado
+
+    async def __bloquear_contas_para_concorrencia(
+        self, numero_da_conta_origem: str, numero_da_conta_destino: str | None = None
+    ) -> None:
+        bloquear_conta_origem = (
+            select(Conta)
+            .where(Conta.numero_da_conta == numero_da_conta_origem)
+            .with_for_update()
+        )
+        await self.session.execute(bloquear_conta_origem)
+
+        if numero_da_conta_destino:
+            bloquear_conta_destino = (
+                select(Conta)
+                .where(Conta.numero_da_conta == numero_da_conta_destino)
+                .with_for_update()
+            )
+            await self.session.execute(bloquear_conta_destino)

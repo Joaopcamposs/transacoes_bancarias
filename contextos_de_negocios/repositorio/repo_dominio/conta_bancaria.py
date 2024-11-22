@@ -4,6 +4,7 @@ from sqlalchemy import select, insert, delete, update, Uuid
 from sqlalchemy.orm import joinedload
 
 from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
+from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
@@ -17,7 +18,6 @@ class ContaBancariaRepoDominio(RepositorioDominio):
                         select(Conta)
                         .options(joinedload(Conta.transacoes))
                         .filter_by(id=id)
-                        .with_for_update()
                     )
                 )
                 .unique()
@@ -32,7 +32,17 @@ class ContaBancariaRepoDominio(RepositorioDominio):
                 numero_da_conta=conta_bancaria.numero_da_conta,
                 saldo=conta_bancaria.saldo,
                 cpf_cliente=conta_bancaria.cpf_cliente,
-                transacoes=conta_bancaria.transacoes,
+                transacoes=[
+                    Transacao(
+                        id=transacao.id,
+                        tipo=transacao.tipo,
+                        valor=transacao.valor,
+                        data=transacao.data,
+                        numero_da_conta=transacao.numero_da_conta,
+                        numero_da_conta_destino=transacao.numero_da_conta_destino,
+                    )
+                    for transacao in conta_bancaria.transacoes
+                ],
             )
         return agregado
 
@@ -44,7 +54,6 @@ class ContaBancariaRepoDominio(RepositorioDominio):
                         select(Conta)
                         .options(joinedload(Conta.transacoes))
                         .filter_by(numero_da_conta=numero_da_conta)
-                        .with_for_update()
                     )
                 )
                 .unique()
@@ -59,7 +68,17 @@ class ContaBancariaRepoDominio(RepositorioDominio):
                 numero_da_conta=conta_bancaria.numero_da_conta,
                 saldo=conta_bancaria.saldo,
                 cpf_cliente=conta_bancaria.cpf_cliente,
-                transacoes=conta_bancaria.transacoes,
+                transacoes=[
+                    Transacao(
+                        id=transacao.id,
+                        tipo=transacao.tipo,
+                        valor=transacao.valor,
+                        data=transacao.data,
+                        numero_da_conta=transacao.numero_da_conta,
+                        numero_da_conta_destino=transacao.numero_da_conta_destino,
+                    )
+                    for transacao in conta_bancaria.transacoes
+                ],
             )
         return agregado
 
@@ -79,19 +98,17 @@ class ContaBancariaRepoDominio(RepositorioDominio):
                 match tipo_operacao:
                     case TipoOperacao.INSERCAO:
                         operacao = insert(Conta).values(dados).returning(Conta.id)
-
                         resultado = await self.session.execute(operacao)
-                        await self.session.commit()
 
                     case TipoOperacao.ATUALIZACAO:
                         operacao = (
                             update(Conta).where(Conta.id == conta.id).values(dados)
                         )
-
                         await self.session.execute(operacao)
-                        await self.session.commit()
+
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro
 
             id_resultado: UUID | None = conta.id
@@ -106,7 +123,7 @@ class ContaBancariaRepoDominio(RepositorioDominio):
                 operacao = delete(Conta).where(Conta.id == conta.id)
 
                 await self.session.execute(operacao)
-                await self.session.commit()
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro

@@ -66,9 +66,7 @@ class UsuarioRepoDominio(RepositorioDominio):
                 match tipo_operacao:
                     case TipoOperacao.INSERCAO:
                         operacao = insert(Usuario).values(dados).returning(Usuario.id)
-
                         resultado = await self.session.execute(operacao)
-                        await self.session.commit()
 
                     case TipoOperacao.ATUALIZACAO:
                         operacao = (
@@ -76,11 +74,11 @@ class UsuarioRepoDominio(RepositorioDominio):
                             .where(Usuario.id == usuario.id)
                             .values(dados)
                         )
-
                         await self.session.execute(operacao)
-                        await self.session.commit()
+
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro
 
             id_resultado: UUID | None = usuario.id
@@ -95,7 +93,7 @@ class UsuarioRepoDominio(RepositorioDominio):
                 operacao = delete(Usuario).where(Usuario.id == usuario.id)
 
                 await self.session.execute(operacao)
-                await self.session.commit()
+                await self.commit()
             except Exception as erro:
-                await self.session.rollback()
+                await self.rollback()
                 raise erro

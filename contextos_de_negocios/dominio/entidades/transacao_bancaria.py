@@ -16,7 +16,7 @@ class CadastrarTransacaoBancaria(BaseModel):
     tipo: TipoTransacao
     valor: Decimal
     numero_da_conta: str
-    numero_da_conta_destino: str | None = None
+    numero_da_conta_destino: str = ""
 
     @field_validator("valor", mode="before")
     def formatar_saldo(cls, v):

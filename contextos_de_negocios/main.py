@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import sentry_sdk
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
@@ -33,6 +35,16 @@ sentry_sdk.init(
     enable_tracing=True,
 )
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_mappers()
+    async with obter_async_engine().begin() as conn:
+        await conn.run_sync(mapper_registry.metadata.create_all)
+    await criar_primeiro_usuario()
+    yield
+
+
 app = FastAPI(
     title="API Transações Bancárias",
     description="APIs REST",
@@ -40,6 +52,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 
@@ -57,14 +70,6 @@ async def test():
 async def trigger_error():
     # apenas para testar o sentry
     return 1 / 0
-
-
-@app.on_event("startup")
-async def startup():
-    start_mappers()
-    async with obter_async_engine().begin() as conn:
-        await conn.run_sync(mapper_registry.metadata.create_all)
-    await criar_primeiro_usuario()
 
 
 # CORS

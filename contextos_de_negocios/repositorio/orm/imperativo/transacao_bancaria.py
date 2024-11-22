@@ -12,7 +12,7 @@ tabela_transacao_bancaria = Table(
     Column("id", Uuid, primary_key=True, index=True, default=uuid4),
     Column("tipo", String(255), nullable=False),
     Column("valor", Numeric, nullable=False),
-    Column("data", DateTime, nullable=False, server_default=func.now()),
+    Column("data", DateTime(timezone=True), nullable=False, server_default=func.now()),
     Column(
         "numero_da_conta",
         String(255),
