@@ -11,55 +11,57 @@ from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
 class ContaBancariaRepoDominio(RepositorioDominio):
     async def consultar_por_id(self, id: Uuid) -> Conta | None:
-        conta_bancaria = (
-            (
-                await self.session.execute(
-                    select(ContaBancaria)
-                    .options(joinedload(ContaBancaria.transacoes))
-                    .filter_by(id=id)
-                    .with_for_update()
+        async with self:
+            conta_bancaria = (
+                (
+                    await self.session.execute(
+                        select(ContaBancaria)
+                        .options(joinedload(ContaBancaria.transacoes))
+                        .filter_by(id=id)
+                        .with_for_update()
+                    )
                 )
+                .unique()
+                .scalar_one_or_none()
             )
-            .unique()
-            .scalar_one_or_none()
-        )
 
-        if not conta_bancaria:
-            return None
+            if not conta_bancaria:
+                return None
 
-        agregado = Conta(
-            id=conta_bancaria.id,
-            numero_da_conta=conta_bancaria.numero_da_conta,
-            saldo=conta_bancaria.saldo,
-            cpf_cliente=conta_bancaria.cpf_cliente,
-            transacoes=conta_bancaria.transacoes,
-        )
+            agregado = Conta(
+                id=conta_bancaria.id,
+                numero_da_conta=conta_bancaria.numero_da_conta,
+                saldo=conta_bancaria.saldo,
+                cpf_cliente=conta_bancaria.cpf_cliente,
+                transacoes=conta_bancaria.transacoes,
+            )
         return agregado
 
     async def consultar_por_numero_da_conta(self, numero_da_conta: str) -> Conta | None:
-        conta_bancaria = (
-            (
-                await self.session.execute(
-                    select(ContaBancaria)
-                    .options(joinedload(ContaBancaria.transacoes))
-                    .filter_by(numero_da_conta=numero_da_conta)
-                    .with_for_update()
+        async with self:
+            conta_bancaria = (
+                (
+                    await self.session.execute(
+                        select(ContaBancaria)
+                        .options(joinedload(ContaBancaria.transacoes))
+                        .filter_by(numero_da_conta=numero_da_conta)
+                        .with_for_update()
+                    )
                 )
+                .unique()
+                .scalar_one_or_none()
             )
-            .unique()
-            .scalar_one_or_none()
-        )
 
-        if not conta_bancaria:
-            return None
+            if not conta_bancaria:
+                return None
 
-        agregado = Conta(
-            id=conta_bancaria.id,
-            numero_da_conta=conta_bancaria.numero_da_conta,
-            saldo=conta_bancaria.saldo,
-            cpf_cliente=conta_bancaria.cpf_cliente,
-            transacoes=conta_bancaria.transacoes,
-        )
+            agregado = Conta(
+                id=conta_bancaria.id,
+                numero_da_conta=conta_bancaria.numero_da_conta,
+                saldo=conta_bancaria.saldo,
+                cpf_cliente=conta_bancaria.cpf_cliente,
+                transacoes=conta_bancaria.transacoes,
+            )
         return agregado
 
     async def adicionar(
@@ -67,47 +69,51 @@ class ContaBancariaRepoDominio(RepositorioDominio):
         conta: Conta,
         tipo_operacao: TipoOperacao,
     ) -> UUID:
-        try:
-            dados = {
-                "numero_da_conta": conta.numero_da_conta,
-                "saldo": conta.saldo,
-                "cpf_cliente": conta.cpf_cliente,
-            }
+        async with self:
+            try:
+                dados = {
+                    "numero_da_conta": conta.numero_da_conta,
+                    "saldo": conta.saldo,
+                    "cpf_cliente": conta.cpf_cliente,
+                }
 
-            match tipo_operacao:
-                case TipoOperacao.INSERCAO:
-                    operacao = (
-                        insert(ContaBancaria).values(dados).returning(ContaBancaria.id)
-                    )
+                match tipo_operacao:
+                    case TipoOperacao.INSERCAO:
+                        operacao = (
+                            insert(ContaBancaria)
+                            .values(dados)
+                            .returning(ContaBancaria.id)
+                        )
 
-                    resultado = await self.session.execute(operacao)
-                    await self.session.commit()
+                        resultado = await self.session.execute(operacao)
+                        await self.session.commit()
 
-                case TipoOperacao.ATUALIZACAO:
-                    operacao = (
-                        update(ContaBancaria)
-                        .where(ContaBancaria.id == conta.id)
-                        .values(dados)
-                    )
+                    case TipoOperacao.ATUALIZACAO:
+                        operacao = (
+                            update(ContaBancaria)
+                            .where(ContaBancaria.id == conta.id)
+                            .values(dados)
+                        )
 
-                    await self.session.execute(operacao)
-                    await self.session.commit()
-        except Exception as erro:
-            await self.session.rollback()
-            raise erro
+                        await self.session.execute(operacao)
+                        await self.session.commit()
+            except Exception as erro:
+                await self.session.rollback()
+                raise erro
 
-        id_resultado: UUID | None = conta.id
-        if not id_resultado:
-            id_resultado = resultado.scalar_one_or_none()
+            id_resultado: UUID | None = conta.id
+            if not id_resultado:
+                id_resultado = resultado.scalar_one_or_none()
 
         return id_resultado
 
     async def remover(self, conta: Conta) -> None:
-        try:
-            operacao = delete(ContaBancaria).where(ContaBancaria.id == conta.id)
+        async with self:
+            try:
+                operacao = delete(ContaBancaria).where(ContaBancaria.id == conta.id)
 
-            await self.session.execute(operacao)
-            await self.session.commit()
-        except Exception as erro:
-            await self.session.rollback()
-            raise erro
+                await self.session.execute(operacao)
+                await self.session.commit()
+            except Exception as erro:
+                await self.session.rollback()
+                raise erro

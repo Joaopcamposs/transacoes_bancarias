@@ -10,18 +10,19 @@ from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
 class ClienteRepoDominio(RepositorioDominio):
     async def consultar_por_id(self, id: Uuid) -> ClienteAgregado | None:
-        cliente = (
-            await self.session.execute(select(Cliente).where(Cliente.id == id))
-        ).scalar_one_or_none()
+        async with self:
+            cliente = (
+                await self.session.execute(select(Cliente).where(Cliente.id == id))
+            ).scalar_one_or_none()
 
-        if not cliente:
-            return None
+            if not cliente:
+                return None
 
-        agregado = ClienteAgregado(
-            id=cliente.id,
-            nome=cliente.nome,
-            cpf=cliente.cpf,
-        )
+            agregado = ClienteAgregado(
+                id=cliente.id,
+                nome=cliente.nome,
+                cpf=cliente.cpf,
+            )
         return agregado
 
     async def adicionar(
@@ -29,42 +30,46 @@ class ClienteRepoDominio(RepositorioDominio):
         cliente: ClienteAgregado,
         tipo_operacao: TipoOperacao,
     ) -> UUID:
-        try:
-            dados = {
-                "nome": cliente.nome,
-                "cpf": cliente.cpf,
-            }
+        async with self:
+            try:
+                dados = {
+                    "nome": cliente.nome,
+                    "cpf": cliente.cpf,
+                }
 
-            match tipo_operacao:
-                case TipoOperacao.INSERCAO:
-                    operacao = insert(Cliente).values(dados).returning(Cliente.id)
+                match tipo_operacao:
+                    case TipoOperacao.INSERCAO:
+                        operacao = insert(Cliente).values(dados).returning(Cliente.id)
 
-                    resultado = await self.session.execute(operacao)
-                    await self.session.commit()
+                        resultado = await self.session.execute(operacao)
+                        await self.session.commit()
 
-                case TipoOperacao.ATUALIZACAO:
-                    operacao = (
-                        update(Cliente).where(Cliente.id == cliente.id).values(dados)
-                    )
+                    case TipoOperacao.ATUALIZACAO:
+                        operacao = (
+                            update(Cliente)
+                            .where(Cliente.id == cliente.id)
+                            .values(dados)
+                        )
 
-                    await self.session.execute(operacao)
-                    await self.session.commit()
-        except Exception as erro:
-            await self.session.rollback()
-            raise erro
+                        await self.session.execute(operacao)
+                        await self.session.commit()
+            except Exception as erro:
+                await self.session.rollback()
+                raise erro
 
-        id_resultado: UUID | None = cliente.id
-        if not id_resultado:
-            id_resultado = resultado.scalar_one_or_none()
+            id_resultado: UUID | None = cliente.id
+            if not id_resultado:
+                id_resultado = resultado.scalar_one_or_none()
 
         return id_resultado
 
     async def remover(self, cliente: ClienteAgregado) -> None:
-        try:
-            operacao = delete(Cliente).where(Cliente.id == cliente.id)
+        async with self:
+            try:
+                operacao = delete(Cliente).where(Cliente.id == cliente.id)
 
-            await self.session.execute(operacao)
-            await self.session.commit()
-        except Exception as erro:
-            await self.session.rollback()
-            raise erro
+                await self.session.execute(operacao)
+                await self.session.commit()
+            except Exception as erro:
+                await self.session.rollback()
+                raise erro

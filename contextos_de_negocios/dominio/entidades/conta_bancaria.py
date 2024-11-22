@@ -25,9 +25,6 @@ class AtualizarContaBancaria(BaseModel):
 
     _numero_da_conta_antigo: UUID4 | None = None
 
-    class Config:
-        underscore_attrs_are_private = True  # Torna os atributos com "_" privados
-
 
 class LerContaBancaria(BaseModel):
     id: UUID4

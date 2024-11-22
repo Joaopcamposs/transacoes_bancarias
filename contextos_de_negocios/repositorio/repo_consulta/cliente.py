@@ -12,37 +12,38 @@ class ClienteRepoConsulta(RepositorioConsulta):
     async def consultar_por_filtros(
         self, filtros: Filtros
     ) -> Sequence[ClienteEntidade]:
-        async with self.session() as session:
+        async with self:
             clientes = (
-                (await session.execute(select(Cliente).filter_by(**filtros)))
+                (await self.session.execute(select(Cliente).filter_by(**filtros)))
                 .scalars()
                 .all()
             )
 
-        clientes_entidade = [
-            ClienteEntidade(
-                id=cliente.id,
-                nome=cliente.nome,
-                cpf=cliente.cpf,
-            )
-            for cliente in clientes
-        ]
+            clientes_entidade = [
+                ClienteEntidade(
+                    id=cliente.id,
+                    nome=cliente.nome,
+                    cpf=cliente.cpf,
+                )
+                for cliente in clientes
+            ]
 
         return clientes_entidade
 
     async def consultar_um_por_filtros(
         self, filtros: Filtros
     ) -> ClienteEntidade | None:
-        cliente = (
-            await self.session.execute(select(Cliente).filter_by(**filtros))
-        ).scalar_one_or_none()
-        if not cliente:
-            return None
+        async with self:
+            cliente = (
+                await self.session.execute(select(Cliente).filter_by(**filtros))
+            ).scalar_one_or_none()
+            if not cliente:
+                return None
 
-        cliente_entidade = ClienteEntidade(
-            id=cliente.id,
-            nome=cliente.nome,
-            cpf=cliente.cpf,
-        )
+            cliente_entidade = ClienteEntidade(
+                id=cliente.id,
+                nome=cliente.nome,
+                cpf=cliente.cpf,
+            )
 
         return cliente_entidade

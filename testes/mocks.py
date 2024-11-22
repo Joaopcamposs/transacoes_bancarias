@@ -32,7 +32,7 @@ class MockUsuarioAPI:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
+async def mock_usuario_api() -> MockUsuarioAPI:
     from contextos_de_negocios.dominio.entidades.usuario import (
         CadastrarUsuario,
     )
@@ -50,24 +50,14 @@ async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
     )
 
     usuario_cadastrado = None
-    async with session_factory() as session:
-        if (
-            len(
-                list(
-                    await UsuarioRepoConsulta(session=session).consultar_por_filtros(
-                        Filtros({})
-                    )
-                )
-            )
-            == 0
-        ):
-            usuario_cadastrado = await cadastrar_usuario(novo_usuario)
-            print(usuario_cadastrado)
+    if len(list(await UsuarioRepoConsulta().consultar_por_filtros(Filtros({})))) == 0:
+        usuario_cadastrado = await cadastrar_usuario(novo_usuario)
+        print(usuario_cadastrado)
 
-        if not usuario_cadastrado:
-            usuario_cadastrado = await UsuarioRepoConsulta(
-                session=session
-            ).consultar_um_por_filtros(Filtros({"email": novo_usuario.email}))
+    if not usuario_cadastrado:
+        usuario_cadastrado = await UsuarioRepoConsulta().consultar_um_por_filtros(
+            Filtros({"email": novo_usuario.email})
+        )
 
     access_token = criar_token(data={"sub": usuario_cadastrado.email})
 

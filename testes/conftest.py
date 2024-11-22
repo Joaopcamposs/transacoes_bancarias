@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -6,7 +8,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from contextos_de_negocios.utils.constantes import SQLITE_TESTE
-from infra.banco_de_dados import Base, obter_uri_do_banco_de_dados
+from infra.banco_de_dados import Base
 from contextos_de_negocios.main import app
 from testes.mocks import (
     mock_cliente,
@@ -18,24 +20,15 @@ from testes.mocks import (
 )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def set_test_env():
+    os.environ["TEST_ENV"] = "true"
+
+
 @pytest.fixture
-def client_api(setup_engine):
-    # app.dependency_overrides[get_db] = override_get_db
+def client_api():
     client_api_test = TestClient(app)
     return client_api_test
-
-
-@pytest_asyncio.fixture(scope="function", autouse=True)
-async def setup_engine():
-    global _ENGINE
-    _ENGINE = create_async_engine(
-        obter_uri_do_banco_de_dados(eh_teste=True),
-        isolation_level="SERIALIZABLE",
-        future=True,
-    )
-    yield
-    # Opcional: Limpar engine após os testes
-    _ENGINE = None
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -47,11 +40,6 @@ def test_engine():
     )
     yield engine
     engine.dispose()
-
-
-@pytest_asyncio.fixture(scope="session")
-async def session_factory(test_engine):
-    yield sessionmaker(expire_on_commit=False, bind=test_engine, class_=AsyncSession)
 
 
 async def limpar_banco_de_dados(test_engine):
@@ -77,7 +65,7 @@ async def limpar_banco_de_dados(test_engine):
 
 # Fixture de limpeza antes e depois de cada teste individual
 @pytest_asyncio.fixture(scope="function", autouse=True)
-async def limpador_de_banco_de_dados(test_engine, setup_engine):
+async def limpador_de_banco_de_dados(test_engine):
     # Limpa o banco de dados antes de cada teste
     await limpar_banco_de_dados(test_engine)
     yield  # Executa o teste

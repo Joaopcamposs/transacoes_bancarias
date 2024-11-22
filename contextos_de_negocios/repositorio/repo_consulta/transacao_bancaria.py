@@ -12,23 +12,28 @@ class TransacaoBancariaRepoConsulta(RepositorioConsulta):
     async def consultar_por_filtros(
         self, filtros: Filtros
     ) -> Sequence[TransacaoEntidade]:
-        transacaos = (
-            (await self.session.execute(select(TransacaoBancaria).filter_by(**filtros)))
-            .scalars()
-            .all()
-        )
-
-        transacaos_entidade = [
-            TransacaoEntidade(
-                id=transacao.id,
-                tipo=transacao.tipo,
-                valor=transacao.valor,
-                data=transacao.data,
-                numero_da_conta=transacao.numero_da_conta,
-                numero_da_conta_destino=transacao.numero_da_conta_destino,
+        async with self:
+            transacaos = (
+                (
+                    await self.session.execute(
+                        select(TransacaoBancaria).filter_by(**filtros)
+                    )
+                )
+                .scalars()
+                .all()
             )
-            for transacao in transacaos
-        ]
+
+            transacaos_entidade = [
+                TransacaoEntidade(
+                    id=transacao.id,
+                    tipo=transacao.tipo,
+                    valor=transacao.valor,
+                    data=transacao.data,
+                    numero_da_conta=transacao.numero_da_conta,
+                    numero_da_conta_destino=transacao.numero_da_conta_destino,
+                )
+                for transacao in transacaos
+            ]
 
         return transacaos_entidade
 

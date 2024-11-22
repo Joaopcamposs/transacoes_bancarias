@@ -19,9 +19,6 @@ class AtualizarUsuario(BaseModel):
     ativo: bool
     _senha: str | None = None
 
-    class Config:
-        underscore_attrs_are_private = True
-
 
 class LerUsuario(BaseModel):
     id: UUID4
@@ -39,6 +36,3 @@ class UsuarioEntidade:
     adm: bool
     ativo: bool
     _senha: str
-
-    class Config:
-        underscore_attrs_are_private = True

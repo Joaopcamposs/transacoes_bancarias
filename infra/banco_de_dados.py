@@ -1,5 +1,8 @@
+import os
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from contextos_de_negocios.utils.constantes import (
     SENHA_PRIMEIRO_USUARIO,
@@ -14,7 +17,7 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 def obter_uri_do_banco_de_dados(eh_teste: bool = False) -> str:
-    if eh_teste:
+    if eh_teste or os.getenv("TEST_ENV", "false").lower() == "true":
         return SQLITE_TESTE
 
     host = DB_HOST
@@ -50,27 +53,42 @@ async def criar_primeiro_usuario() -> None:
         await cadastrar_usuario(usuario=usuario)
 
 
-_ENGINE: AsyncEngine | None = None
+ASYNC_ENGINE: AsyncEngine | None = None
 
 
-def get_engine():
-    global _ENGINE
-    if _ENGINE is None:
-        _ENGINE = create_async_engine(
-            obter_uri_do_banco_de_dados(),
-            isolation_level="REPEATABLE READ",
-            future=True,
-        )
-    return _ENGINE
+def obter_async_engine() -> AsyncEngine:
+    def _criar_engine_correta() -> AsyncEngine:
+        global ASYNC_ENGINE
+
+        if not ASYNC_ENGINE:
+            url_banco_de_dados = obter_uri_do_banco_de_dados()
+            if "sqlite" in url_banco_de_dados:
+                ASYNC_ENGINE = create_async_engine(
+                    url_banco_de_dados,
+                    future=True,
+                    isolation_level="SERIALIZABLE",
+                )
+                return ASYNC_ENGINE
+            ASYNC_ENGINE = create_async_engine(
+                url_banco_de_dados,
+                isolation_level="REPEATABLE READ",
+                future=True,
+            )
+
+        return ASYNC_ENGINE
+
+    engine_correta = _criar_engine_correta()
+
+    return engine_correta
 
 
-def DEFAULT_SQL_SESSION_FACTORY():
-    _engine = get_engine()
+def DEFAULT_SQL_SESSION_FACTORY() -> sessionmaker[AsyncSession]:
+    _engine = obter_async_engine()
 
-    session = AsyncSession(
-        bind=_engine.execution_options(),
-        autoflush=True,
+    async_session = sessionmaker(
+        bind=_engine,
         expire_on_commit=False,
+        class_=AsyncSession,
     )
 
-    return session
+    return async_session
