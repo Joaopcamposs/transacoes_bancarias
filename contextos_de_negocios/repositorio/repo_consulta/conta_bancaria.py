@@ -12,19 +12,16 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 
 class ContaBancariaRepoConsulta(RepositorioConsulta):
     async def consultar_por_filtros(self, filtros: Filtros) -> Sequence[ContaEntidade]:
+        listar_transacoes = True
+        if "listar_transacoes" in filtros:
+            listar_transacoes = filtros.get("listar_transacoes")
+            filtros.pop("listar_transacoes")
+
         async with self:
-            contas = (
-                (
-                    await self.session.execute(
-                        select(Conta)
-                        .options(joinedload(Conta.transacoes))
-                        .filter_by(**filtros)
-                    )
-                )
-                .unique()
-                .scalars()
-                .all()
-            )
+            operacao = select(Conta).filter_by(**filtros)
+            if listar_transacoes:
+                operacao = operacao.options(joinedload(Conta.transacoes))
+            contas = (await self.session.execute(operacao)).unique().scalars().all()
 
             contas_entidade = [
                 ContaEntidade(
@@ -42,7 +39,9 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
                             numero_da_conta_destino=transacao.numero_da_conta_destino,
                         )
                         for transacao in conta.transacoes
-                    ],
+                    ]
+                    if listar_transacoes
+                    else [],
                 )
                 for conta in contas
             ]
@@ -50,18 +49,16 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
         return contas_entidade
 
     async def consultar_um_por_filtros(self, filtros: Filtros) -> ContaEntidade | None:
+        listar_transacoes = True
+        if "listar_transacoes" in filtros:
+            listar_transacoes = filtros.get("listar_transacoes")
+            filtros.pop("listar_transacoes")
+
         async with self:
-            conta = (
-                (
-                    await self.session.execute(
-                        select(Conta)
-                        .options(joinedload(Conta.transacoes))
-                        .filter_by(**filtros)
-                    )
-                )
-                .unique()
-                .scalar_one_or_none()
-            )
+            operacao = select(Conta).filter_by(**filtros)
+            if listar_transacoes:
+                operacao = operacao.options(joinedload(Conta.transacoes))
+            conta = (await self.session.execute(operacao)).unique().scalar_one_or_none()
             if not conta:
                 return None
 
@@ -80,7 +77,9 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
                         numero_da_conta_destino=transacao.numero_da_conta_destino,
                     )
                     for transacao in conta.transacoes
-                ],
+                ]
+                if listar_transacoes
+                else [],
             )
 
         return conta_entidade

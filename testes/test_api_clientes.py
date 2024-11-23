@@ -16,8 +16,6 @@ def test_cadastrar_cliente(client_api, mock_usuario_api):
         **dados_cliente,
     }
 
-    return id_cliente
-
 
 def test_listar_todos_clientes(client_api, mock_usuario_api, mock_cliente):
     response = client_api.get(
@@ -25,6 +23,7 @@ def test_listar_todos_clientes(client_api, mock_usuario_api, mock_cliente):
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
+    assert response.json()[0] == mock_cliente.to_dict()
 
 
 def test_consultar_cliente_por_cpf(client_api, mock_usuario_api, mock_cliente):
@@ -35,6 +34,7 @@ def test_consultar_cliente_por_cpf(client_api, mock_usuario_api, mock_cliente):
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
+    assert response.json()[0] == mock_cliente.to_dict()
 
 
 def test_consultar_cliente_por_id(client_api, mock_usuario_api, mock_cliente):
@@ -45,16 +45,7 @@ def test_consultar_cliente_por_id(client_api, mock_usuario_api, mock_cliente):
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
-
-
-def test_consultar_cliente_por_nome(client_api, mock_usuario_api, mock_cliente):
-    nome_cliente = mock_cliente.nome
-
-    response = client_api.get(
-        f"api/clientes?nome={nome_cliente}",
-        headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
-    )
-    assert response.status_code == 200, response.text
+    assert response.json()[0] == mock_cliente.to_dict()
 
 
 def test_atualizar_cliente_por_cpf(

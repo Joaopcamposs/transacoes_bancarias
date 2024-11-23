@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from contextos_de_negocios.utils.constantes import pwd_context
+from libs.ddd.dominio.agregado import Agregado
 
 
 @dataclass
-class Usuario:
+class Usuario(Agregado):
     nome: str
     email: str
     senha: str

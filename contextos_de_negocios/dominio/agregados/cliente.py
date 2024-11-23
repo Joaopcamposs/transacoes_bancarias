@@ -2,10 +2,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from contextos_de_negocios.utils.tipos_basicos import CPF
+from libs.ddd.dominio.agregado import Agregado
 
 
 @dataclass
-class Cliente:
+class Cliente(Agregado):
     nome: str
     cpf: CPF
     id: UUID | None = None

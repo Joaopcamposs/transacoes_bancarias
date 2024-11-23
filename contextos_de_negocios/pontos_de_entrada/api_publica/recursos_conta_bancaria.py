@@ -9,7 +9,6 @@ from contextos_de_negocios.dominio.entidades.conta_bancaria import (
     CadastrarContaBancaria,
     AtualizarContaBancaria,
     LerContaBancaria,
-    LerContaBancariaETransacoes,
 )
 from contextos_de_negocios.servicos.executores.conta_bancaria import (
     cadastrar_conta,
@@ -17,9 +16,6 @@ from contextos_de_negocios.servicos.executores.conta_bancaria import (
     remover_conta,
 )
 from contextos_de_negocios.servicos.executores.seguranca import obter_usuario_atual
-from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
-    LerTransacaoBancaria,
-)
 from libs.ddd.adaptadores.visualizadores import Filtros
 
 router = APIRouter(
@@ -31,7 +27,7 @@ router = APIRouter(
 
 @router.get(
     "/conta_bancarias",
-    response_model=list[LerContaBancaria] | LerContaBancariaETransacoes,
+    response_model=list[LerContaBancaria],
 )
 async def listar(
     id: UUID4 | None = None,
@@ -42,27 +38,18 @@ async def listar(
         {
             "id": id,
             "numero_da_conta": numero_da_conta,
+            "listar_transacoes": listar_transacoes,
         }
     )
 
-    conta_bancarias = await ContaBancariaRepoConsulta().consultar_por_filtros(
+    contas_bancarias = await ContaBancariaRepoConsulta().consultar_por_filtros(
         filtros=filtros
     )
 
-    if not conta_bancarias:
+    if not contas_bancarias:
         raise ContaBancariaNaoEncontrado
 
-    if listar_transacoes:
-        return LerContaBancariaETransacoes(
-            contas=[LerContaBancaria.from_conta(conta) for conta in conta_bancarias],
-            transacoes=[
-                LerTransacaoBancaria.from_transacao(transacao)
-                for conta in conta_bancarias
-                for transacao in conta.transacoes
-            ],
-        )
-
-    return conta_bancarias
+    return contas_bancarias
 
 
 @router.post("/conta_bancaria", response_model=LerContaBancaria)

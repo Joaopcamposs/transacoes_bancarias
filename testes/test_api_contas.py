@@ -30,13 +30,16 @@ def test_cadastrar_conta(
 async def test_listar_todas_contas_bancarias(
     client_api, mock_usuario_api, mock_conta_bancaria
 ):
-    await mock_conta_bancaria(numero_da_conta="123", saldo=Decimal(100.00))
+    conta = await mock_conta_bancaria(numero_da_conta="123", saldo=Decimal(100.00))
 
     response = client_api.get(
         "api/conta_bancarias",
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
+    conta_dict = conta.to_dict()
+    conta_dict.pop("transacoes")
+    assert response.json()[0] == conta_dict
 
 
 @pytest.mark.asyncio
@@ -48,6 +51,24 @@ async def test_consultar_conta_bancaria_por_numero_da_conta(
 
     response = client_api.get(
         f"api/conta_bancarias?numero_da_conta={numero_da_conta}",
+        headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
+    )
+    assert response.status_code == 200, response.text
+    conta_dict = conta.to_dict()
+    conta_dict.pop("transacoes")
+    assert response.json()[0] == conta_dict
+
+
+@pytest.mark.asyncio
+async def test_consultar_conta_bancaria_e_transacoes_por_numero_da_conta(
+    client_api, mock_usuario_api, mock_conta_bancaria, mock_transacao_bancaria
+):
+    conta = await mock_conta_bancaria(numero_da_conta="123", saldo=Decimal(100.00))
+    await mock_transacao_bancaria(numero_da_conta="123", valor=Decimal(100.00))
+    numero_da_conta = conta.numero_da_conta
+
+    response = client_api.get(
+        f"api/conta_bancarias?numero_da_conta={numero_da_conta}&listar_transacoes=true",
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
@@ -65,6 +86,9 @@ async def test_consultar_conta_bancaria_por_id(
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
+    conta_dict = conta.to_dict()
+    conta_dict.pop("transacoes")
+    assert response.json()[0] == conta_dict
 
 
 @pytest.mark.asyncio

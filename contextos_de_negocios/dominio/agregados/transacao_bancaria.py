@@ -7,10 +7,11 @@ from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
     TipoTransacao,
 )
 from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta
+from libs.ddd.dominio.agregado import Agregado
 
 
 @dataclass
-class Transacao:
+class Transacao(Agregado):
     tipo: TipoTransacao
     valor: Decimal
     data: datetime

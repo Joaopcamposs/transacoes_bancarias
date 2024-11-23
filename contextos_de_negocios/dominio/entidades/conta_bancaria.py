@@ -31,6 +31,7 @@ class LerContaBancaria(BaseModel):
     numero_da_conta: str
     saldo: Decimal
     cpf_cliente: str
+    transacoes: list[LerTransacaoBancaria]
 
     @field_validator("saldo", mode="before")
     def formatar_saldo(cls, v):
@@ -44,11 +45,6 @@ class LerContaBancaria(BaseModel):
             saldo=conta.saldo,
             cpf_cliente=conta.cpf_cliente,
         )
-
-
-class LerContaBancariaETransacoes(BaseModel):
-    contas: list[LerContaBancaria]
-    transacoes: list[LerTransacaoBancaria]
 
 
 @dataclass(frozen=True)

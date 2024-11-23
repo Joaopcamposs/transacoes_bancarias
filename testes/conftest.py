@@ -18,6 +18,8 @@ from testes.mocks import (
     mock_conta_bancaria,
     mock_usuario_gen,
     mock_conta_bancaria_gen,
+    mock_transacao_bancaria,
+    mock_transacao_bancaria_gen,
 )
 
 

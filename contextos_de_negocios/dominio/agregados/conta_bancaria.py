@@ -17,10 +17,11 @@ from contextos_de_negocios.dominio.regras_de_negocio.transacao_bancaria import (
     obter_hora_local,
 )
 from contextos_de_negocios.utils.tipos_basicos import NumeroDaConta, CPF
+from libs.ddd.dominio.agregado import Agregado
 
 
 @dataclass
-class Conta:
+class Conta(Agregado):
     numero_da_conta: NumeroDaConta | str
     saldo: Decimal
     cpf_cliente: CPF | str
