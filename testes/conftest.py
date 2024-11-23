@@ -4,8 +4,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import Table
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from contextos_de_negocios.utils.constantes import SQLITE_TESTE
 from contextos_de_negocios.main import app
@@ -53,9 +52,6 @@ def test_engine():
 
 
 async def limpar_banco_de_dados(test_engine):
-    testing_session = sessionmaker(
-        expire_on_commit=False, bind=test_engine, class_=AsyncSession
-    )
     # necessario adicionar as tabelas na ordem correta, manualmente
     lista_de_tabelas = [
         "usuario",
@@ -63,14 +59,19 @@ async def limpar_banco_de_dados(test_engine):
         "transacao_bancaria",
         "conta_bancaria",
     ]
-    async with testing_session() as session:
-        for table_name in lista_de_tabelas:
-            table = Table(table_name, mapper_registry.metadata)
-            try:
-                await session.execute(table.delete())
-            except Exception as e:
-                print(e)
-        await session.commit()
+
+    async with test_engine.connect() as conn:
+        transaction = await conn.begin()
+        try:
+            for table_name in lista_de_tabelas:
+                # Reflete as tabelas
+                table = Table(table_name, mapper_registry.metadata)
+                # Executa o DELETE para limpar os dados
+                await conn.execute(table.delete())
+            await transaction.commit()
+        except Exception as e:
+            await transaction.rollback()
+            print(f"Erro ao limpar a tabela {table_name}: {e}")
 
 
 # Fixture de limpeza antes e depois de cada teste individual
@@ -79,5 +80,3 @@ async def limpador_de_banco_de_dados(test_engine):
     # Limpa o banco de dados antes de cada teste
     await limpar_banco_de_dados(test_engine)
     yield  # Executa o teste
-    # Limpa o banco de dados após o teste
-    await limpar_banco_de_dados(test_engine)
