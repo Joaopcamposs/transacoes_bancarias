@@ -6,14 +6,28 @@ import pytest
 import pytest_asyncio
 from pydantic import UUID4
 
-from contextos_de_negocios.cliente.controllers import ClienteControllers
-from contextos_de_negocios.cliente.models import Cliente
-from contextos_de_negocios.cliente.schemas import CadastrarEAtualizarCliente
-from contextos_de_negocios.conta_bancaria.controllers import ContaBancariaControllers
-from contextos_de_negocios.conta_bancaria.models import ContaBancaria
-from contextos_de_negocios.conta_bancaria.schemas import CadastrarContaBancaria
-from contextos_de_negocios.servicos.controllers import Servicos
+from contextos_de_negocios.dominio.agregados.cliente import Cliente
+from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
+from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
+from contextos_de_negocios.dominio.entidades.cliente import CadastrarCliente
+from contextos_de_negocios.dominio.entidades.transacao_bancaria import (
+    CadastrarTransacaoBancaria,
+)
+from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
+    TipoTransacao,
+)
+from contextos_de_negocios.servicos.executores.cliente import cadastrar_cliente
+
+from contextos_de_negocios.dominio.entidades.conta_bancaria import (
+    CadastrarContaBancaria,
+)
+from contextos_de_negocios.servicos.executores.conta_bancaria import cadastrar_conta
+from contextos_de_negocios.servicos.executores.seguranca import criar_token
+from contextos_de_negocios.servicos.executores.transacao_bancaria import (
+    cadastrar_transacao_bancaria,
+)
 from contextos_de_negocios.utils.tipos_basicos import CPF
+from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 @dataclass
@@ -28,63 +42,57 @@ class MockUsuarioAPI:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def mock_usuario_api(session_factory) -> MockUsuarioAPI:
-    usuario_mock = MockUsuarioAPI(
+async def mock_usuario_api() -> MockUsuarioAPI:
+    from contextos_de_negocios.dominio.entidades.usuario import (
+        CadastrarUsuario,
+    )
+    from contextos_de_negocios.repositorio.repo_consulta.usuario import (
+        UsuarioRepoConsulta,
+    )
+    from contextos_de_negocios.servicos.executores.usuario import cadastrar_usuario
+
+    novo_usuario = CadastrarUsuario(
         nome="Admin",
         email="admin@email.com",
         senha="1234",
         adm=True,
         ativo=True,
-        token="",
     )
 
-    usuario_mock.senha = Servicos.criptografar_senha(usuario_mock.senha)
+    usuario_cadastrado = None
+    if len(list(await UsuarioRepoConsulta().consultar_por_filtros(Filtros({})))) == 0:
+        usuario_cadastrado = await cadastrar_usuario(novo_usuario)
+        print(usuario_cadastrado)
 
-    from contextos_de_negocios.usuario.schemas import CadastrarEAtualizarUsuario
-    from contextos_de_negocios.usuario.repositorio import RepoUsuarioLeitura
-    from contextos_de_negocios.usuario.controllers import UsuarioControllers
-
-    async with session_factory() as session:
-        novo_usuario = CadastrarEAtualizarUsuario(
-            nome=usuario_mock.nome,
-            email=usuario_mock.email,
-            senha=usuario_mock.senha,
-            adm=usuario_mock.adm,
-            ativo=usuario_mock.ativo,
+    if not usuario_cadastrado:
+        usuario_cadastrado = await UsuarioRepoConsulta().consultar_um_por_filtros(
+            Filtros({"email": novo_usuario.email})
         )
 
-        usuario_cadastrado = None
-        if len(list(await RepoUsuarioLeitura.consultar_todos(session))) == 0:
-            usuario_cadastrado = await UsuarioControllers.cadastrar(
-                session, novo_usuario
-            )
-            print(usuario_cadastrado)
+    access_token = criar_token(data={"sub": usuario_cadastrado.email})
 
-        if not usuario_cadastrado:
-            usuario_cadastrado = await RepoUsuarioLeitura.consultar_por_email(
-                session, novo_usuario.email
-            )
+    usuario_mock = MockUsuarioAPI(
+        id=usuario_cadastrado.id,
+        nome=usuario_cadastrado.nome,
+        email=usuario_cadastrado.email,
+        senha=novo_usuario.senha,
+        adm=usuario_cadastrado.adm,
+        ativo=usuario_cadastrado.ativo,
+        token=access_token,
+    )
 
-        access_token = Servicos.criar_token(data={"sub": usuario_cadastrado.email})
-
-        usuario_mock.id = str(usuario_cadastrado.id)
-        usuario_mock.token = access_token
-
-        return usuario_mock
+    return usuario_mock
 
 
 @pytest.fixture(scope="function")
 def mock_cliente_gen() -> dict:
-    return {"nome": "Cliente Teste", "cpf": CPF().gerar()}
+    return {"nome": "Cliente Teste", "cpf": CPF.gerar()}
 
 
 @pytest_asyncio.fixture(scope="function")
-async def mock_cliente(mock_cliente_gen, session_factory) -> Cliente:
-    dados_para_cadastrar = CadastrarEAtualizarCliente(**mock_cliente_gen)
-    async with session_factory() as session:
-        cliente = await ClienteControllers.cadastrar(
-            session=session, cliente=dados_para_cadastrar
-        )
+async def mock_cliente(mock_cliente_gen) -> Cliente:
+    dados_para_cadastrar = CadastrarCliente(**mock_cliente_gen)
+    cliente = await cadastrar_cliente(cliente=dados_para_cadastrar)
 
     return cliente
 
@@ -99,19 +107,16 @@ def mock_conta_bancaria_gen() -> dict:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def mock_conta_bancaria(mock_cliente, session_factory):
+async def mock_conta_bancaria(mock_cliente):
     async def _create_mock_conta(
         numero_da_conta: str | None = None, saldo: Decimal | None = None
-    ) -> ContaBancaria:
+    ) -> Conta:
         dados_para_cadastrar = CadastrarContaBancaria(
             numero_da_conta=numero_da_conta or str(randint(100000, 999999)),
             saldo=saldo or Decimal(0.0),
             cpf_cliente=mock_cliente.cpf,
         )
-        async with session_factory() as session:
-            conta = await ContaBancariaControllers.cadastrar(
-                session=session, conta_bancaria=dados_para_cadastrar
-            )
+        conta = await cadastrar_conta(conta_bancaria=dados_para_cadastrar)
         return conta
 
     return _create_mock_conta
@@ -126,3 +131,34 @@ def mock_usuario_gen() -> dict:
         "adm": False,
         "ativo": True,
     }
+
+
+@pytest.fixture(scope="function")
+def mock_transacao_bancaria_gen(mock_conta_bancaria_gen) -> dict:
+    return {
+        "tipo": "deposito",
+        "valor": "100.00",
+        "numero_da_conta": mock_conta_bancaria_gen["numero_da_conta"],
+    }
+
+
+@pytest_asyncio.fixture(scope="function")
+async def mock_transacao_bancaria(mock_conta_bancaria, mock_transacao_bancaria_gen):
+    async def _create_mock_transacao(
+        tipo: str = mock_transacao_bancaria_gen["tipo"],
+        valor: Decimal = Decimal(mock_transacao_bancaria_gen["valor"]),
+        numero_da_conta: str = mock_transacao_bancaria_gen["numero_da_conta"],
+        numero_da_conta_destino: str = "",
+    ) -> Transacao:
+        dados_para_cadastrar = CadastrarTransacaoBancaria(
+            tipo=TipoTransacao[tipo.upper()],
+            valor=valor,
+            numero_da_conta=numero_da_conta,
+            numero_da_conta_destino=numero_da_conta_destino,
+        )
+        transacao = await cadastrar_transacao_bancaria(
+            transacao_bancaria=dados_para_cadastrar
+        )
+        return transacao
+
+    return _create_mock_transacao

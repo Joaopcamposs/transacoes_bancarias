@@ -10,12 +10,13 @@ class TipoOperacao(Enum):
     REMOCAO = "remocao"
 
 
-class CPF(ValidadorDeCPF):
+class CPF(str):
     def __init__(self, cpf: str = ""):
         self.cpf = self.somente_digitos(cpf)
+        self.validar()
 
     def validar(self) -> None:
-        if not self.validate():
+        if not ValidadorDeCPF().validate(self.cpf):
             raise ValueError("CPF inválido")
 
     @staticmethod
@@ -26,6 +27,9 @@ class CPF(ValidadorDeCPF):
     def gerar() -> str:
         cpf_gerado = ValidadorDeCPF().generate()
         return str(cpf_gerado)
+
+    def __str__(self) -> str:
+        return self.cpf
 
 
 class NumeroDaConta(str):
