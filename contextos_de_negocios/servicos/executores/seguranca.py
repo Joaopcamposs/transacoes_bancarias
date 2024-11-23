@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 
 import jwt
 from fastapi import Depends
-from jwt import InvalidTokenError
+from jwt import InvalidTokenError, ExpiredSignatureError
 from typing_extensions import Annotated
 
 from contextos_de_negocios.dominio.agregados.usuario import Usuario
@@ -10,6 +10,7 @@ from contextos_de_negocios.dominio.entidades.usuario import UsuarioEntidade
 from contextos_de_negocios.dominio.exceptions import (
     PermissaoFaltando,
     NaoFoiPossivelValidarAsCredenciais,
+    LoginExpirado,
 )
 from contextos_de_negocios.repositorio.repo_dominio.usuario import UsuarioRepoDominio
 from contextos_de_negocios.utils.constantes import SECRET_KEY, ALGORITHM, oauth2_scheme
@@ -49,17 +50,17 @@ async def obter_usuario_atual(
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise NaoFoiPossivelValidarAsCredenciais(
-                headers={"WWW-Authenticate": "Bearer"}
-            )
+            raise NaoFoiPossivelValidarAsCredenciais
         dados_token = TokenData(email=email)
-    except InvalidTokenError:
-        raise NaoFoiPossivelValidarAsCredenciais(headers={"WWW-Authenticate": "Bearer"})
+    except ExpiredSignatureError as erro:
+        raise LoginExpirado from erro
+    except InvalidTokenError as erro:
+        raise NaoFoiPossivelValidarAsCredenciais from erro
     usuario = await UsuarioRepoConsulta().consultar_um_por_filtros(
         Filtros({"email": dados_token.email})
     )
     if usuario is None:
-        raise NaoFoiPossivelValidarAsCredenciais(headers={"WWW-Authenticate": "Bearer"})
+        raise NaoFoiPossivelValidarAsCredenciais
     return usuario
 
 
