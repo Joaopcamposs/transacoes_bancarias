@@ -1,14 +1,18 @@
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from sqlalchemy import Uuid, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from contextos_de_negocios.repositorio.orm.declarativo.cliente import ClienteDB
 from contextos_de_negocios.repositorio.orm.declarativo.transacao_bancaria import (
     TransacaoBancariaDB,
 )
 from infra.banco_de_dados import Base
+
+# Importação apenas para checagem de tipos
+if TYPE_CHECKING:
+    from contextos_de_negocios.repositorio.orm.declarativo import ClienteDB
 
 
 class ContaBancariaDB(Base):
