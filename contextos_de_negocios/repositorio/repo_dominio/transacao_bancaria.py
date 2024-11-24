@@ -2,10 +2,15 @@ from uuid import UUID
 
 from sqlalchemy import update, insert, select
 
-from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
 from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.objetos_de_valor.transacao_bancaria import (
     TipoTransacao,
+)
+from contextos_de_negocios.repositorio.orm.declarativo.conta_bancaria import (
+    ContaBancariaDB,
+)
+from contextos_de_negocios.repositorio.orm.declarativo.transacao_bancaria import (
+    TransacaoBancariaDB,
 )
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
@@ -29,7 +34,11 @@ class TransacaoBancariaRepoDominio(RepositorioDominio):
                     "numero_da_conta": transacao.numero_da_conta,
                     "numero_da_conta_destino": transacao.numero_da_conta_destino,
                 }
-                operacao = insert(Transacao).values(dados).returning(Transacao.id)
+                operacao = (
+                    insert(TransacaoBancariaDB)
+                    .values(dados)
+                    .returning(TransacaoBancariaDB.id)
+                )
                 resultado = await self.session.execute(operacao)
 
                 # tratar valor movimentado de acordo com o tipo de transacao
@@ -41,19 +50,20 @@ class TransacaoBancariaRepoDominio(RepositorioDominio):
                     valor_movimentado *= -1
 
                 atualizar_saldo_conta_origem = (
-                    update(Conta)
-                    .where(Conta.numero_da_conta == transacao.numero_da_conta)
-                    .values(saldo=Conta.saldo + valor_movimentado)
+                    update(ContaBancariaDB)
+                    .where(ContaBancariaDB.numero_da_conta == transacao.numero_da_conta)
+                    .values(saldo=ContaBancariaDB.saldo + valor_movimentado)
                 )
                 await self.session.execute(atualizar_saldo_conta_origem)
 
                 if transacao.numero_da_conta_destino:
                     atualizar_saldo_conta_destino = (
-                        update(Conta)
+                        update(ContaBancariaDB)
                         .where(
-                            Conta.numero_da_conta == transacao.numero_da_conta_destino
+                            ContaBancariaDB.numero_da_conta
+                            == transacao.numero_da_conta_destino
                         )
-                        .values(saldo=Conta.saldo + transacao.valor)
+                        .values(saldo=ContaBancariaDB.saldo + transacao.valor)
                     )
                     await self.session.execute(atualizar_saldo_conta_destino)
 
@@ -72,16 +82,16 @@ class TransacaoBancariaRepoDominio(RepositorioDominio):
         self, numero_da_conta_origem: str, numero_da_conta_destino: str | None = None
     ) -> None:
         bloquear_conta_origem = (
-            select(Conta)
-            .where(Conta.numero_da_conta == numero_da_conta_origem)
+            select(ContaBancariaDB)
+            .where(ContaBancariaDB.numero_da_conta == numero_da_conta_origem)
             .with_for_update()
         )
         await self.session.execute(bloquear_conta_origem)
 
         if numero_da_conta_destino:
             bloquear_conta_destino = (
-                select(Conta)
-                .where(Conta.numero_da_conta == numero_da_conta_destino)
+                select(ContaBancariaDB)
+                .where(ContaBancariaDB.numero_da_conta == numero_da_conta_destino)
                 .with_for_update()
             )
             await self.session.execute(bloquear_conta_destino)

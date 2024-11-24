@@ -3,9 +3,11 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from contextos_de_negocios.dominio.agregados.conta_bancaria import Conta
 from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.entidades.conta_bancaria import ContaEntidade
+from contextos_de_negocios.repositorio.orm.declarativo.conta_bancaria import (
+    ContaBancariaDB,
+)
 from libs.ddd.adaptadores.repositorio import RepositorioConsulta
 from libs.ddd.adaptadores.visualizadores import Filtros
 
@@ -18,9 +20,9 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
             filtros.pop("listar_transacoes")
 
         async with self:
-            operacao = select(Conta).filter_by(**filtros)
+            operacao = select(ContaBancariaDB).filter_by(**filtros)
             if listar_transacoes:
-                operacao = operacao.options(joinedload(Conta.transacoes))
+                operacao = operacao.options(joinedload(ContaBancariaDB.transacoes))
             contas = (await self.session.execute(operacao)).unique().scalars().all()
 
             contas_entidade = [
@@ -55,9 +57,9 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
             filtros.pop("listar_transacoes")
 
         async with self:
-            operacao = select(Conta).filter_by(**filtros)
+            operacao = select(ContaBancariaDB).filter_by(**filtros)
             if listar_transacoes:
-                operacao = operacao.options(joinedload(Conta.transacoes))
+                operacao = operacao.options(joinedload(ContaBancariaDB.transacoes))
             conta = (await self.session.execute(operacao)).unique().scalar_one_or_none()
             if not conta:
                 return None

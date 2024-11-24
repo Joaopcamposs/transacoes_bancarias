@@ -2,8 +2,10 @@ from typing import Sequence
 
 from sqlalchemy import select
 
-from contextos_de_negocios.dominio.agregados.transacao_bancaria import Transacao
 from contextos_de_negocios.dominio.entidades.transacao_bancaria import TransacaoEntidade
+from contextos_de_negocios.repositorio.orm.declarativo.transacao_bancaria import (
+    TransacaoBancariaDB,
+)
 from libs.ddd.adaptadores.repositorio import RepositorioConsulta
 from libs.ddd.adaptadores.visualizadores import Filtros
 
@@ -14,7 +16,11 @@ class TransacaoBancariaRepoConsulta(RepositorioConsulta):
     ) -> Sequence[TransacaoEntidade]:
         async with self:
             transacaos = (
-                (await self.session.execute(select(Transacao).filter_by(**filtros)))
+                (
+                    await self.session.execute(
+                        select(TransacaoBancariaDB).filter_by(**filtros)
+                    )
+                )
                 .scalars()
                 .all()
             )
@@ -37,7 +43,7 @@ class TransacaoBancariaRepoConsulta(RepositorioConsulta):
         self, filtros: Filtros
     ) -> TransacaoEntidade | None:
         transacao = (
-            await self.session.execute(select(Transacao).filter_by(**filtros))
+            await self.session.execute(select(TransacaoBancariaDB).filter_by(**filtros))
         ).scalar_one_or_none()
         if not transacao:
             return None

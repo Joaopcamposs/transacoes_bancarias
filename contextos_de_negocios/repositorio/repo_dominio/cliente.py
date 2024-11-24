@@ -5,6 +5,7 @@ from sqlalchemy import insert, update, delete, Uuid, select
 from contextos_de_negocios.dominio.agregados.cliente import (
     Cliente,
 )
+from contextos_de_negocios.repositorio.orm.declarativo.cliente import ClienteDB
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
@@ -13,7 +14,7 @@ class ClienteRepoDominio(RepositorioDominio):
     async def consultar_por_id(self, id: Uuid) -> Cliente | None:
         async with self:
             cliente = (
-                await self.session.execute(select(Cliente).where(Cliente.id == id))
+                await self.session.execute(select(ClienteDB).where(ClienteDB.id == id))
             ).scalar_one_or_none()
 
             if not cliente:
@@ -40,13 +41,15 @@ class ClienteRepoDominio(RepositorioDominio):
 
                 match tipo_operacao:
                     case TipoOperacao.INSERCAO:
-                        operacao = insert(Cliente).values(dados).returning(Cliente.id)
+                        operacao = (
+                            insert(ClienteDB).values(dados).returning(ClienteDB.id)
+                        )
                         resultado = await self.session.execute(operacao)
 
                     case TipoOperacao.ATUALIZACAO:
                         operacao = (
-                            update(Cliente)
-                            .where(Cliente.id == cliente.id)
+                            update(ClienteDB)
+                            .where(ClienteDB.id == cliente.id)
                             .values(dados)
                         )
                         await self.session.execute(operacao)
@@ -65,7 +68,7 @@ class ClienteRepoDominio(RepositorioDominio):
     async def remover(self, cliente: Cliente) -> None:
         async with self:
             try:
-                operacao = delete(Cliente).where(Cliente.id == cliente.id)
+                operacao = delete(ClienteDB).where(ClienteDB.id == cliente.id)
 
                 await self.session.execute(operacao)
                 await self.commit()

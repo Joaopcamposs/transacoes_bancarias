@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from contextos_de_negocios.utils.constantes import SQLITE_TESTE
 from contextos_de_negocios.main import app
 from infra import start_mappers
-from infra.banco_de_dados import mapper_registry
+from infra.banco_de_dados import mapper_registry, Base
 from testes.mocks import (
     mock_cliente,
     mock_cliente_gen,
@@ -29,9 +29,9 @@ def set_test_env():
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def inicializar_banco_de_dados(test_engine):
-    start_mappers()
+    # start_mappers()
     async with test_engine.begin() as conn:
-        await conn.run_sync(mapper_registry.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture

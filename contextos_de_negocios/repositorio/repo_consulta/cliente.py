@@ -2,8 +2,8 @@ from typing import Sequence
 
 from sqlalchemy import select
 
-from contextos_de_negocios.dominio.agregados.cliente import Cliente
 from contextos_de_negocios.dominio.entidades.cliente import ClienteEntidade
+from contextos_de_negocios.repositorio.orm.declarativo.cliente import ClienteDB
 from libs.ddd.adaptadores.repositorio import RepositorioConsulta
 from libs.ddd.adaptadores.visualizadores import Filtros
 
@@ -14,7 +14,7 @@ class ClienteRepoConsulta(RepositorioConsulta):
     ) -> Sequence[ClienteEntidade]:
         async with self:
             clientes = (
-                (await self.session.execute(select(Cliente).filter_by(**filtros)))
+                (await self.session.execute(select(ClienteDB).filter_by(**filtros)))
                 .scalars()
                 .all()
             )
@@ -35,7 +35,7 @@ class ClienteRepoConsulta(RepositorioConsulta):
     ) -> ClienteEntidade | None:
         async with self:
             cliente = (
-                await self.session.execute(select(Cliente).filter_by(**filtros))
+                await self.session.execute(select(ClienteDB).filter_by(**filtros))
             ).scalar_one_or_none()
             if not cliente:
                 return None

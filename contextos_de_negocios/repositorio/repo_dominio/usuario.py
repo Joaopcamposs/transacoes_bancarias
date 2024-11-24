@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import Uuid, select, insert, update, delete
 
 from contextos_de_negocios.dominio.agregados.usuario import Usuario
+from contextos_de_negocios.repositorio.orm.declarativo.usuario import UsuarioDB
 from contextos_de_negocios.utils.tipos_basicos import TipoOperacao
 from libs.ddd.adaptadores.repositorio import RepositorioDominio
 
@@ -11,7 +12,7 @@ class UsuarioRepoDominio(RepositorioDominio):
     async def consultar_por_id(self, id: Uuid) -> Usuario | None:
         async with self:
             usuario = (
-                await self.session.execute(select(Usuario).where(Usuario.id == id))
+                await self.session.execute(select(UsuarioDB).where(UsuarioDB.id == id))
             ).scalar_one_or_none()
 
             if not usuario:
@@ -31,7 +32,7 @@ class UsuarioRepoDominio(RepositorioDominio):
         async with self:
             usuario = (
                 await self.session.execute(
-                    select(Usuario).where(Usuario.email == email)
+                    select(UsuarioDB).where(UsuarioDB.email == email)
                 )
             ).scalar_one_or_none()
 
@@ -65,13 +66,15 @@ class UsuarioRepoDominio(RepositorioDominio):
 
                 match tipo_operacao:
                     case TipoOperacao.INSERCAO:
-                        operacao = insert(Usuario).values(dados).returning(Usuario.id)
+                        operacao = (
+                            insert(UsuarioDB).values(dados).returning(UsuarioDB.id)
+                        )
                         resultado = await self.session.execute(operacao)
 
                     case TipoOperacao.ATUALIZACAO:
                         operacao = (
-                            update(Usuario)
-                            .where(Usuario.id == usuario.id)
+                            update(UsuarioDB)
+                            .where(UsuarioDB.id == usuario.id)
                             .values(dados)
                         )
                         await self.session.execute(operacao)
@@ -90,7 +93,7 @@ class UsuarioRepoDominio(RepositorioDominio):
     async def remover(self, usuario: Usuario) -> None:
         async with self:
             try:
-                operacao = delete(Usuario).where(Usuario.id == usuario.id)
+                operacao = delete(UsuarioDB).where(UsuarioDB.id == usuario.id)
 
                 await self.session.execute(operacao)
                 await self.commit()
