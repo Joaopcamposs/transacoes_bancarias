@@ -2,7 +2,7 @@ from datetime import timedelta, datetime
 
 import jwt
 from fastapi import Depends
-from jwt import InvalidTokenError, ExpiredSignatureError
+from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
 from typing_extensions import Annotated
 
 from contextos_de_negocios.dominio.agregados.usuario import Usuario

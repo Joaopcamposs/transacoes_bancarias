@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from contextos_de_negocios.utils.constantes import pwd_context
+import bcrypt
+
 from libs.ddd.dominio.agregado import Agregado
 
 
@@ -43,10 +44,8 @@ class Usuario(Agregado):
     def remover(self) -> None: ...
 
     def verificar_senha(self, senha: str) -> bool:
-        senhas_conferem = pwd_context.verify(secret=senha, hash=self.senha)
-        return senhas_conferem
+        return bcrypt.checkpw(senha.encode()[:72], self.senha.encode())
 
     @staticmethod
     def criptografar_senha(senha: str) -> str:
-        senha_criptografada = pwd_context.hash(secret=senha)
-        return senha_criptografada
+        return bcrypt.hashpw(senha.encode()[:72], bcrypt.gensalt()).decode()

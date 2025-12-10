@@ -4,3 +4,4 @@ database.db
 .env
 testes/test_database.db
 test_database.db
+.venv
