@@ -23,13 +23,29 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
                 operacao = operacao.options(joinedload(Conta.transacoes))
             contas = (await self.session.execute(operacao)).unique().scalars().all()
 
-            contas_entidade = [
-                ContaEntidade(
-                    id=conta.id,
-                    numero_da_conta=conta.numero_da_conta,
-                    saldo=conta.saldo,
-                    cpf_cliente=conta.cpf_cliente,
-                    transacoes=[
+            contas_entidade = []
+            for conta in contas:
+                transacoes_lista = []
+                if listar_transacoes:
+                    transacoes_recebidas = (
+                        (
+                            await self.session.execute(
+                                select(Transacao).where(
+                                    Transacao.numero_da_conta_destino
+                                    == conta.numero_da_conta
+                                )
+                            )
+                        )
+                        .scalars()
+                        .all()
+                    )
+
+                    todas_transacoes = list(conta.transacoes) + list(
+                        transacoes_recebidas
+                    )
+                    todas_transacoes.sort(key=lambda t: t.data, reverse=True)
+
+                    transacoes_lista = [
                         Transacao(
                             id=transacao.id,
                             tipo=transacao.tipo,
@@ -38,13 +54,18 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
                             numero_da_conta=transacao.numero_da_conta,
                             numero_da_conta_destino=transacao.numero_da_conta_destino,
                         )
-                        for transacao in conta.transacoes
+                        for transacao in todas_transacoes
                     ]
-                    if listar_transacoes
-                    else [],
+
+                contas_entidade.append(
+                    ContaEntidade(
+                        id=conta.id,
+                        numero_da_conta=conta.numero_da_conta,
+                        saldo=conta.saldo,
+                        cpf_cliente=conta.cpf_cliente,
+                        transacoes=transacoes_lista,
+                    )
                 )
-                for conta in contas
-            ]
 
         return contas_entidade
 
@@ -62,12 +83,25 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
             if not conta:
                 return None
 
-            conta_entidade = ContaEntidade(
-                id=conta.id,
-                numero_da_conta=conta.numero_da_conta,
-                saldo=conta.saldo,
-                cpf_cliente=conta.cpf_cliente,
-                transacoes=[
+            transacoes_lista = []
+            if listar_transacoes:
+                transacoes_recebidas = (
+                    (
+                        await self.session.execute(
+                            select(Transacao).where(
+                                Transacao.numero_da_conta_destino
+                                == conta.numero_da_conta
+                            )
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+
+                todas_transacoes = list(conta.transacoes) + list(transacoes_recebidas)
+                todas_transacoes.sort(key=lambda t: t.data, reverse=True)
+
+                transacoes_lista = [
                     Transacao(
                         id=transacao.id,
                         tipo=transacao.tipo,
@@ -76,10 +110,15 @@ class ContaBancariaRepoConsulta(RepositorioConsulta):
                         numero_da_conta=transacao.numero_da_conta,
                         numero_da_conta_destino=transacao.numero_da_conta_destino,
                     )
-                    for transacao in conta.transacoes
+                    for transacao in todas_transacoes
                 ]
-                if listar_transacoes
-                else [],
+
+            conta_entidade = ContaEntidade(
+                id=conta.id,
+                numero_da_conta=conta.numero_da_conta,
+                saldo=conta.saldo,
+                cpf_cliente=conta.cpf_cliente,
+                transacoes=transacoes_lista,
             )
 
         return conta_entidade
