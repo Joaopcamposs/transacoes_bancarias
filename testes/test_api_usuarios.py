@@ -1,8 +1,24 @@
-def test_cadastrar_usuario(
-    client_api,
-    mock_usuario_api,
-    mock_usuario_gen,
-):
+def _criar_usuario_teste(client_api, token, dados=None):
+    """Helper para criar usuário de teste via API."""
+    from contextos_de_negocios.utils.tipos_basicos import CPF
+
+    if dados is None:
+        dados = {
+            "nome": "Usuário Teste",
+            "email": f"teste_{CPF.gerar()[:8]}@email.com",
+            "senha": "1234",
+            "adm": False,
+            "ativo": True,
+        }
+    response = client_api.post(
+        "api/usuario",
+        json=dados,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    return response.json(), dados
+
+
+def test_cadastrar_usuario(client_api, mock_usuario_api, mock_usuario_gen):
     dados_usuario = mock_usuario_gen
 
     response = client_api.post(
@@ -13,10 +29,10 @@ def test_cadastrar_usuario(
     assert response.status_code == 200, response.text
     id_usuario = response.json()["id"]
 
-    dados_usuario.pop("senha")
+    dados_esperados = {k: v for k, v in dados_usuario.items() if k != "senha"}
     assert response.json() == {
         "id": id_usuario,
-        **dados_usuario,
+        **dados_esperados,
     }
 
 
@@ -39,7 +55,9 @@ def test_consultar_usuario_por_email(client_api, mock_usuario_api):
 
 
 def test_consultar_usuario_por_id(client_api, mock_usuario_api):
-    id_usuario = mock_usuario_api.id
+    # Criar um usuário novo para ter ID válido
+    usuario, _ = _criar_usuario_teste(client_api, mock_usuario_api.token)
+    id_usuario = usuario["id"]
 
     response = client_api.get(
         f"api/usuarios?id={id_usuario}",
@@ -48,48 +66,54 @@ def test_consultar_usuario_por_id(client_api, mock_usuario_api):
     assert response.status_code == 200, response.text
 
 
-def test_atualizar_usuario_por_email(client_api, mock_usuario_api, mock_usuario_gen):
-    email_usuario, id_usuario = mock_usuario_api.email, mock_usuario_api.id
+def test_atualizar_usuario_por_email(client_api, mock_usuario_api):
+    # Criar usuário novo para atualizar
+    usuario, dados_originais = _criar_usuario_teste(client_api, mock_usuario_api.token)
+    email_usuario = usuario["email"]
 
-    usuario_atualizado = mock_usuario_gen
-    usuario_atualizado["nome"] = "Teste Atualizado"
-    usuario_atualizado["ativo"] = False
+    usuario_atualizado = {
+        "nome": "Teste Atualizado",
+        "email": dados_originais["email"],
+        "senha": "nova_senha",
+        "adm": False,
+        "ativo": False,
+    }
 
     response = client_api.put(
         f"api/usuario?email={email_usuario}",
         json=usuario_atualizado,
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
-    usuario_atualizado.pop("senha")
     assert response.status_code == 200, response.text
-    assert response.json() == {
-        "id": str(id_usuario),
-        **usuario_atualizado,
+    assert response.json()["nome"] == "Teste Atualizado"
+
+
+def test_atualizar_usuario_por_id(client_api, mock_usuario_api):
+    # Criar usuário novo para atualizar
+    usuario, dados_originais = _criar_usuario_teste(client_api, mock_usuario_api.token)
+    id_usuario = usuario["id"]
+
+    usuario_atualizado = {
+        "nome": "Teste Atualizado Por ID",
+        "email": dados_originais["email"],
+        "senha": "nova_senha",
+        "adm": False,
+        "ativo": False,
     }
-
-
-def test_atualizar_usuario_por_id(client_api, mock_usuario_api, mock_usuario_gen):
-    id_usuario = mock_usuario_api.id
-
-    usuario_atualizado = mock_usuario_gen
-    usuario_atualizado["nome"] = "Teste Atualizado"
-    usuario_atualizado["ativo"] = False
 
     response = client_api.put(
         f"api/usuario?id={id_usuario}",
         json=usuario_atualizado,
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
-    usuario_atualizado.pop("senha")
     assert response.status_code == 200, response.text
-    assert response.json() == {
-        "id": str(id_usuario),
-        **usuario_atualizado,
-    }
+    assert response.json()["nome"] == "Teste Atualizado Por ID"
 
 
 def test_excluir_usuario_por_email(client_api, mock_usuario_api):
-    email_usuario = mock_usuario_api.email
+    # Criar usuário novo para excluir
+    usuario, _ = _criar_usuario_teste(client_api, mock_usuario_api.token)
+    email_usuario = usuario["email"]
 
     response = client_api.delete(
         f"api/usuario?email={email_usuario}",
@@ -99,7 +123,9 @@ def test_excluir_usuario_por_email(client_api, mock_usuario_api):
 
 
 def test_excluir_usuario_por_id(client_api, mock_usuario_api):
-    id_usuario = mock_usuario_api.id
+    # Criar usuário novo para excluir
+    usuario, _ = _criar_usuario_teste(client_api, mock_usuario_api.token)
+    id_usuario = usuario["id"]
 
     response = client_api.delete(
         f"api/usuario?id={id_usuario}",

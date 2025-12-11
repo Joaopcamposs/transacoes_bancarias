@@ -32,7 +32,6 @@ sentry_sdk.init(
     dsn=SENTRY_DSN,
     traces_sample_rate=1.0,
     profiles_sample_rate=1.0,
-    enable_tracing=True,
 )
 
 

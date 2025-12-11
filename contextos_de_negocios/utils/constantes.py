@@ -24,7 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 with open(BASE_DIR / "infra/secrets.json") as f:
     config = json.load(f)
 
-SQLITE_TESTE = "sqlite+aiosqlite:///test_database.db"
+POSTGRES_TESTE = (
+    "postgresql+asyncpg://postgres:postgres@localhost:54322/transacoes_bancarias_test"
+)
 
 DB_HOST = get_config_value("DB_HOST", "localhost")
 DB_PASSWORD = get_config_value("DB_PASSWORD", "postgres")

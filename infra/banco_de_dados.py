@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker, registry, declarative_base
 from contextos_de_negocios.utils.constantes import (
     SENHA_PRIMEIRO_USUARIO,
     EMAIL_PRIMEIRO_USUARIO,
-    SQLITE_TESTE,
     DB_HOST,
     DB_PASSWORD,
     DB_USER,
@@ -16,8 +15,10 @@ from libs.ddd.adaptadores.visualizadores import Filtros
 
 
 def obter_uri_do_banco_de_dados(eh_teste: bool = False) -> str:
+    from contextos_de_negocios.utils.constantes import POSTGRES_TESTE
+
     if eh_teste or os.getenv("TEST_ENV", "false").lower() == "true":
-        return SQLITE_TESTE
+        return POSTGRES_TESTE
 
     host = DB_HOST
     port = 54321 if host == "localhost" and not eh_teste else 5432
@@ -40,6 +41,7 @@ async def criar_primeiro_usuario() -> None:
         CadastrarUsuario,
     )
     from contextos_de_negocios.servicos.executores.usuario import cadastrar_usuario
+    from sqlalchemy.exc import IntegrityError
 
     usuarios = await UsuarioRepoConsulta().consultar_por_filtros(Filtros({}))
     if not usuarios:
@@ -50,7 +52,11 @@ async def criar_primeiro_usuario() -> None:
             adm=True,
             ativo=True,
         )
-        await cadastrar_usuario(usuario=usuario)
+        try:
+            await cadastrar_usuario(usuario=usuario)
+        except IntegrityError:
+            # Usuário já foi criado por outra thread/processo concorrente
+            pass
 
 
 ASYNC_ENGINE: AsyncEngine | None = None

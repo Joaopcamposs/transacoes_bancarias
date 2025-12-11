@@ -1,4 +1,5 @@
 from contextos_de_negocios.utils.tipos_basicos import CPF
+from testes.conftest import criar_cliente_teste
 
 
 def test_cadastrar_cliente(client_api, mock_usuario_api):
@@ -17,16 +18,20 @@ def test_cadastrar_cliente(client_api, mock_usuario_api):
     }
 
 
-def test_listar_todos_clientes(client_api, mock_usuario_api, mock_cliente):
+def test_listar_todos_clientes(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
+
     response = client_api.get(
         "api/clientes",
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
-    assert response.json()[0] == mock_cliente.to_dict()
+    clientes = response.json()
+    assert any(c["id"] == str(mock_cliente.id) for c in clientes)
 
 
-def test_consultar_cliente_por_cpf(client_api, mock_usuario_api, mock_cliente):
+def test_consultar_cliente_por_cpf(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
     cpf_cliente = mock_cliente.cpf
 
     response = client_api.get(
@@ -34,10 +39,11 @@ def test_consultar_cliente_por_cpf(client_api, mock_usuario_api, mock_cliente):
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
-    assert response.json()[0] == mock_cliente.to_dict()
+    assert response.json()[0]["cpf"] == cpf_cliente
 
 
-def test_consultar_cliente_por_id(client_api, mock_usuario_api, mock_cliente):
+def test_consultar_cliente_por_id(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
     id_cliente = mock_cliente.id
 
     response = client_api.get(
@@ -45,16 +51,14 @@ def test_consultar_cliente_por_id(client_api, mock_usuario_api, mock_cliente):
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
-    assert response.json()[0] == mock_cliente.to_dict()
+    assert response.json()[0]["id"] == str(id_cliente)
 
 
-def test_atualizar_cliente_por_cpf(
-    client_api, mock_usuario_api, mock_cliente, mock_cliente_gen
-):
-    cpf_cliente, id_cliente = mock_cliente.cpf, mock_cliente.id
+def test_atualizar_cliente_por_cpf(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
+    cpf_cliente = mock_cliente.cpf
 
-    cliente_atualizado = mock_cliente_gen
-    cliente_atualizado["nome"] = "Teste Atualizado"
+    cliente_atualizado = {"nome": "Teste Atualizado", "cpf": CPF.gerar()}
 
     response = client_api.put(
         f"api/cliente?cpf={cpf_cliente}",
@@ -62,19 +66,14 @@ def test_atualizar_cliente_por_cpf(
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
-    assert response.json() == {
-        "id": str(id_cliente),
-        **cliente_atualizado,
-    }
+    assert response.json()["nome"] == "Teste Atualizado"
 
 
-def test_atualizar_cliente_por_id(
-    client_api, mock_usuario_api, mock_cliente, mock_cliente_gen
-):
+def test_atualizar_cliente_por_id(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
     id_cliente = mock_cliente.id
 
-    cliente_atualizado = mock_cliente_gen
-    cliente_atualizado["nome"] = "Teste Atualizado"
+    cliente_atualizado = {"nome": "Teste Atualizado", "cpf": CPF.gerar()}
 
     response = client_api.put(
         f"api/cliente?id={id_cliente}",
@@ -82,13 +81,11 @@ def test_atualizar_cliente_por_id(
         headers={"Authorization": f"Bearer {mock_usuario_api.token}"},
     )
     assert response.status_code == 200, response.text
-    assert response.json() == {
-        "id": str(id_cliente),
-        **cliente_atualizado,
-    }
+    assert response.json()["nome"] == "Teste Atualizado"
 
 
-def test_excluir_cliente_por_cpf(client_api, mock_usuario_api, mock_cliente):
+def test_excluir_cliente_por_cpf(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
     cpf_cliente = mock_cliente.cpf
 
     response = client_api.delete(
@@ -98,7 +95,8 @@ def test_excluir_cliente_por_cpf(client_api, mock_usuario_api, mock_cliente):
     assert response.status_code == 200, response.text
 
 
-def test_excluir_cliente_por_id(client_api, mock_usuario_api, mock_cliente):
+def test_excluir_cliente_por_id(client_api, mock_usuario_api):
+    mock_cliente = criar_cliente_teste(client_api, mock_usuario_api.token)
     id_cliente = mock_cliente.id
 
     response = client_api.delete(

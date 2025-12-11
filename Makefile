@@ -10,6 +10,17 @@ ruff:
 run:
 	fastapi dev contextos_de_negocios/main.py
 
+# start a local env using dockerfile to run tests
+test-env:
+	docker-compose -f infra/docker-compose.test.yml rm && docker-compose -f infra/docker-compose.test.yml -p $(COMPOSE_NAME)_teste up
+
+test:
+	docker-compose -f infra/docker-compose.test.yml -p $(COMPOSE_NAME)_teste up -d && \
+	sleep 2 && \
+	until docker-compose -f infra/docker-compose.test.yml -p $(COMPOSE_NAME)_teste exec -T postgres_test pg_isready -U postgres; do sleep 1; done && \
+	uv run pytest -v ; \
+	docker-compose -f infra/docker-compose.test.yml -p $(COMPOSE_NAME)_teste down
+	
 docker_pull:
 	docker pull $(IMAGE_NAME):$(TAG)
 
@@ -33,6 +44,9 @@ docker-logs:
 
 docker-build-up-compose:
 	docker-compose -f infra/docker-compose.yml --env-file .env -p $(COMPOSE_NAME) up --build -d
+
+docker-compose-run:
+	docker-compose -f infra/docker-compose.yml --env-file .env -p $(COMPOSE_NAME) up -d
 
 install:
 	uv sync
