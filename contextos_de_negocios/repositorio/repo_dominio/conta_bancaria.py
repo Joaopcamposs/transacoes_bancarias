@@ -46,18 +46,21 @@ class ContaBancariaRepoDominio(RepositorioDominio):
             )
         return agregado
 
-    async def consultar_por_numero_da_conta(self, numero_da_conta: str) -> Conta | None:
+    async def consultar_por_numero_da_conta(
+        self, numero_da_conta: str, lock: bool = False
+    ) -> Conta | None:
         async with self:
+            query = (
+                select(Conta)
+                .options(joinedload(Conta.transacoes))
+                .filter_by(numero_da_conta=numero_da_conta)
+            )
+
+            if lock:
+                query = query.with_for_update()
+
             conta_bancaria = (
-                (
-                    await self.session.execute(
-                        select(Conta)
-                        .options(joinedload(Conta.transacoes))
-                        .filter_by(numero_da_conta=numero_da_conta)
-                    )
-                )
-                .unique()
-                .scalar_one_or_none()
+                (await self.session.execute(query)).unique().scalar_one_or_none()
             )
 
             if not conta_bancaria:
