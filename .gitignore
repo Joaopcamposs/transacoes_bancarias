@@ -1,7 +1,10 @@
 venv
-.idea
-database.db
-.env
-testes/test_database.db
-test_database.db
 .venv
+.idea
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.ruff_cache/
+.pytest_cache/
+uv.lock

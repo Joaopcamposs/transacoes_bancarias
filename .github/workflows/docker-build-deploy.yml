@@ -1,9 +1,7 @@
 name: Docker Build and Deploy Transacoes Bancarias
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,8 +25,8 @@ jobs:
           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
           
-          echo "EMAIL_PRIMEIRO_USUARIO=${{ secrets.EMAIL_PRIMEIRO_USUARIO }}" >> .env
-          echo "SENHA_PRIMEIRO_USUARIO=${{ secrets.SENHA_PRIMEIRO_USUARIO }}" >> .env
+          echo "EMAIL_PRIMEIRO_USUARIO=${{ secrets.FIRST_USER_EMAIL }}" >> .env
+          echo "SENHA_PRIMEIRO_USUARIO=${{ secrets.FIRST_USER_PASSWORD }}" >> .env
           
           echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
           echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env

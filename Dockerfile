@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # setar diretorio de trabalho
 WORKDIR /transacoes_bancarias
@@ -27,4 +27,4 @@ ENV PYTHONPATH=/transacoes_bancarias
 EXPOSE 8000
 
 # executar o app
-CMD ["uvicorn", "contextos_de_negocios.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info", "--forwarded-allow-ips", "*", "--proxy-headers",  "--log-config", "uvicorn_logging_config.json"]
+CMD ["uvicorn", "business_contexts.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info", "--forwarded-allow-ips", "*", "--proxy-headers",  "--log-config", "uvicorn_logging_config.json"]
